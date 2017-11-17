@@ -41,3 +41,30 @@ tap.test("Test wordlist loading from file", function(t) {
     t.same(words, ["foo", "bar", "baz", "quux"]);
     t.end();
 });
+
+
+tap.test("Test word sequence", function(t) {
+    const wordlist = loadModule();
+    wordlist.load("test/words.json");
+    
+    let words = wordlist.getWords();
+    let words2 = [];
+    
+    // traverse all words
+    for (let i = 0; i < words.length; ++i) {
+        let word = wordlist.getNextWord();
+        t.notEqual(words.indexOf(word), -1);
+        words2.push(word);
+    }
+    
+    // ascertain that all words have been traversed
+    words.sort();
+    words2.sort();
+    t.same(words2, words);
+    
+    // ascertain sequence restart
+    let word = wordlist.getNextWord();
+    t.notEqual(words.indexOf(word), -1);
+    
+    t.end();
+});

@@ -34,6 +34,17 @@ const Wordlist = {
      */
     getWords: function() {
         return words.slice();
+    },
+    
+    
+    /**
+     * Returns the next word from the list in a randomized sequence,
+     * starting over with a new random order when the whole list has been traversed.
+     *
+     * @returns {string}    Next word.
+     */
+    getNextWord: function() {
+        return undefined;
     }
 };
 
