@@ -16,7 +16,9 @@ const Wordlist = {
      * @param   {string|Array}  src     Filename or array of words.
      */
     load: function(src) {
-        // TODO
+        if (src instanceof Array) {
+            words = src;
+        }
     },
     
     
