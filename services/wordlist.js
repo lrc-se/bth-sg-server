@@ -6,7 +6,7 @@
 
 "use strict";
 
-var words;
+var words = [];
 
 
 const Wordlist = {
