@@ -10,6 +10,7 @@ const fs = require("fs");
 
 
 var words = [];
+var wordBuffer = [];
 
 
 const Wordlist = {
@@ -44,7 +45,11 @@ const Wordlist = {
      * @returns {string}    Next word.
      */
     getNextWord: function() {
-        return undefined;
+        if (!wordBuffer.length) {
+            wordBuffer = Wordlist.getWords();
+        }
+        
+        return wordBuffer.splice(Math.floor(Math.random() * wordBuffer.length), 1)[0];
     }
 };
 
