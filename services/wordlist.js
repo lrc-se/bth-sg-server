@@ -6,6 +6,9 @@
 
 "use strict";
 
+const fs = require("fs");
+
+
 var words = [];
 
 
@@ -18,6 +21,8 @@ const Wordlist = {
     load: function(src) {
         if (src instanceof Array) {
             words = src;
+        } else {
+            words = JSON.parse(fs.readFileSync(src, { encoding: "UTF-8" }));
         }
     },
     

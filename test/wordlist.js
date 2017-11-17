@@ -35,7 +35,7 @@ tap.test("Test wordlist loading from literal", function(t) {
 
 tap.test("Test wordlist loading from file", function(t) {
     const wordlist = loadModule();
-    wordlist.load("words.json");
+    wordlist.load("test/words.json");
     
     let words = wordlist.getWords();
     t.same(words, ["foo", "bar", "baz", "quux"]);
