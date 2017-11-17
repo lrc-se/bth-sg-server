@@ -5,10 +5,17 @@
 "use strict";
 
 const tap = require("tap");
-const wordlist = require("../services/wordlist.js");
+
+
+function loadModule() {
+    const path = "../services/wordlist";
+    delete require.cache[require.resolve(path)];
+    return require(path);
+}
 
 
 tap.test("Test initial state", function(t) {
+    const wordlist = loadModule();
     let words = wordlist.getWords();
     t.same(words, []);
     t.end();
@@ -16,6 +23,7 @@ tap.test("Test initial state", function(t) {
 
 
 tap.test("Test wordlist loading from literal", function(t) {
+    const wordlist = loadModule();
     let words = ["foo", "bar", "baz"];
     wordlist.load(words);
     
