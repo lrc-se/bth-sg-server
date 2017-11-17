@@ -31,3 +31,13 @@ tap.test("Test wordlist loading from literal", function(t) {
     t.same(words2, words);
     t.end();
 });
+
+
+tap.test("Test wordlist loading from file", function(t) {
+    const wordlist = loadModule();
+    wordlist.load("words.json");
+    
+    let words = wordlist.getWords();
+    t.same(words, ["foo", "bar", "baz", "quux"]);
+    t.end();
+});
