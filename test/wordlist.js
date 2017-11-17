@@ -13,3 +13,13 @@ tap.test("Test initial state", function(t) {
     t.same(words, []);
     t.end();
 });
+
+
+tap.test("Test wordlist loading from literal", function(t) {
+    let words = ["foo", "bar", "baz"];
+    wordlist.load(words);
+    
+    let words2 = wordlist.getWords();
+    t.same(words2, words);
+    t.end();
+});
