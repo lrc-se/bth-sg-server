@@ -1,0 +1,4 @@
+{
+    "report-dir": "./build/coverage",
+    "temp-directory": "./build/.nyc_output"
+}

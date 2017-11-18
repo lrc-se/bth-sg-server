@@ -5,9 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "npm-run-all -c lint tap",
-    "tap": "node_modules/.bin/tap -c --reporter=spec --coverage --coverage-report=html --no-browser test/*.js",
-    "tap-clover": "node_modules/.bin/tap --reporter=tap --coverage --coverage-report=clover test/*.js",
-    "eslint": "node_modules/.bin/eslint --ignore-pattern coverage/**/*.js .",
+    "tap": "tap -c --reporter=spec --coverage --coverage-report=html --no-browser test/*.js",
+    "tap-clover": "tap --reporter=tap --coverage --coverage-report=clover test/*.js",
+    "eslint": "eslint .",
     "lint": "npm-run-all -c eslint"
   },
   "author": "LRC",
