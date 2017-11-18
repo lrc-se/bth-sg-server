@@ -5,17 +5,19 @@
 "use strict";
 
 const tap = require("tap");
+const loadModule = require("./setup/loader");
 
 
-function loadModule() {
-    const path = "../services/wordlist";
-    delete require.cache[require.resolve(path)];
-    return require(path);
-}
+var wordlist;
+
+
+tap.beforeEach(function() {
+    wordlist = loadModule("services/wordlist");
+    return Promise.resolve();
+});
 
 
 tap.test("Test initial state", function(t) {
-    const wordlist = loadModule();
     let words = wordlist.getWords();
     t.same(words, [], "wordlist should be empty");
     t.end();
@@ -23,7 +25,6 @@ tap.test("Test initial state", function(t) {
 
 
 tap.test("Test wordlist loading from literal", function(t) {
-    const wordlist = loadModule();
     let words = ["foo", "bar", "baz"];
     wordlist.load(words);
     
@@ -34,8 +35,7 @@ tap.test("Test wordlist loading from literal", function(t) {
 
 
 tap.test("Test wordlist loading from file", function(t) {
-    const wordlist = loadModule();
-    wordlist.load("test/words.json");
+    wordlist.load("test/setup/words.json");
     
     let words = wordlist.getWords();
     t.same(words, ["foo", "bar", "baz", "quux"], "wordlist should match file contents");
@@ -44,8 +44,7 @@ tap.test("Test wordlist loading from file", function(t) {
 
 
 tap.test("Test word sequence", function(t) {
-    const wordlist = loadModule();
-    wordlist.load("test/words.json");
+    wordlist.load("test/setup/words.json");
     
     let words = wordlist.getWords();
     let words2 = [];
