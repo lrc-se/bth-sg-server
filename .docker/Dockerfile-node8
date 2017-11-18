@@ -1,0 +1,9 @@
+# Node 8 (alpine)
+
+FROM node:8-alpine
+
+WORKDIR /home/node/app/
+
+EXPOSE 1337
+
+CMD sh .docker/test.sh
