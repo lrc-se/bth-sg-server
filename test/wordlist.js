@@ -52,7 +52,7 @@ tap.test("Test word sequence", function(t) {
     // traverse all words
     for (let i = 0; i < words.length; ++i) {
         let word = wordlist.getNextWord();
-        t.notEqual(words.indexOf(word), -1, `"${word}" should be found in wordlist`);
+        t.notEqual(words.indexOf(word), -1, `returned word "${word}" should be found in wordlist`);
         words2.push(word);
     }
     
@@ -63,7 +63,11 @@ tap.test("Test word sequence", function(t) {
     
     // ascertain sequence restart
     let word = wordlist.getNextWord();
-    t.notEqual(words.indexOf(word), -1, `"${word}" should be found in wordlist after sequence reset`);
+    t.notEqual(
+        words.indexOf(word),
+        -1,
+        `returned word "${word}" should be found in wordlist after sequence reset`
+    );
     
     t.end();
 });
