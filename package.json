@@ -20,5 +20,8 @@
     "eslint-plugin-react": "^7.4.0",
     "npm-run-all": "^4.1.2",
     "tap": "^10.7.3"
+  },
+  "dependencies": {
+    "ws": "^3.3.2"
   }
 }
