@@ -130,26 +130,25 @@ function ping(socket) {
 /**
  * Creates a new server instance.
  *
- * @param   {object}        config                      Configuration object:
- * @param   {http.Server}   config.server                 HTTP server instance.
- * @param   {number}        [config.timeout]              Ping timeout in milliseconds.
- * @param   {function}      [config.protocolHandler]      Protocol selection handler.
- * @param   {function}      [config.connectionHandler]    Connection handler.
- * @param   {function}      [config.messageHandler]       Message reception handler.
- * @param   {function}      [config.errorHandler]         Error handler.
- * @param   {function}      [config.closeHandler]         Disconnection handler.
+ * @param   {object}    serverOptions               Construction options for the underlying Web 
+ *                                                  Sockets server. Note that the clientTracking
+ *                                                  and handleProtocols properties are overwritten.
+ * @param   {object}    config                      Configuration object:
+ * @param   {number}    [config.timeout]              Ping timeout in milliseconds.
+ * @param   {function}  [config.protocolHandler]      Protocol selection handler.
+ * @param   {function}  [config.connectionHandler]    Connection handler.
+ * @param   {function}  [config.messageHandler]       Message reception handler.
+ * @param   {function}  [config.errorHandler]         Error handler.
+ * @param   {function}  [config.closeHandler]         Disconnection handler.
  */
-function createServer(config) {
-    let wsConfig = {
-        server: config.server,
-        clientTracking: true
-    };
+function createServer(serverOptions, config) {
+    serverOptions.clientTracking = true;
     if (config.protocolHandler) {
-        wsConfig.handleProtocols = config.protocolHandler;
+        serverOptions.handleProtocols = config.protocolHandler;
     }
     
     // set up Web Sockets server
-    let server = new ws.Server(wsConfig);
+    let server = new ws.Server(serverOptions);
     server.on("connection", function(socket, req) {
         handleConnection(socket, req, config);
     });
