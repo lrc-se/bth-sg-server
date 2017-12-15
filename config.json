@@ -1,0 +1,10 @@
+{
+    "games": [
+        {
+            "port": 1701,
+            "minPlayers": 1,
+            "maxPlayers": 10,
+            "timeout": 60
+        }
+    ]
+}
