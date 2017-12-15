@@ -1,7 +1,7 @@
 /**
  * MongoDB repository.
  *
- * @module  services/db-repository
+ * @module  src/services/db-repository
  */
 
 "use strict";

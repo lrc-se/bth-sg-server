@@ -1,7 +1,7 @@
 /**
  * Wordlist module.
  *
- * @module  services/wordlist
+ * @module  src/services/wordlist
  */
 
 "use strict";

@@ -15,7 +15,7 @@
  * @returns {object}    Loaded module.
  */
 module.exports = function(mod) {
-    let path = "../../" + mod;
+    let path = "../../src/" + mod;
     delete require.cache[require.resolve(path)];
     return require(path);
 };

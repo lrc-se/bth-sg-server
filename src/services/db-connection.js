@@ -1,7 +1,7 @@
 /**
  * MongoDB database connection.
  *
- * @module  services/db-connection
+ * @module  src/services/db-connection
  */
 
 "use strict";
