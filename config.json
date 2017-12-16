@@ -1,4 +1,5 @@
 {
+    "pingTimeout": 30000,
     "games": [
         {
             "port": 1701,

@@ -9,7 +9,7 @@
 const fs = require("fs");
 const http = require("http");
 const SgApp = require("./src/sg-app");
-const SgServer = require("./src/sg-server");
+const SgGame = require("./src/sg-game");
 
 
 // default config
@@ -25,7 +25,7 @@ let config = {
 };
 
 // game servers
-let gameServers = [];
+let games = [];
 
 
 // load config
@@ -53,8 +53,11 @@ fs.readFile("./config.json", { encoding: "utf8" }, function(err, data) {
     for (let cfg of config.games) {
         // setup
         let server = http.createServer(SgApp());
-        let game = SgServer(server, cfg);
-        gameServers.push({ server, game });
+        let game = SgGame({
+            httpServer: server,
+            pingTimeout: config.pingTimeout
+        }, cfg);
+        games.push({ server, game });
         
         // start server
         server.listen(cfg.port, function(err) {

@@ -16,7 +16,7 @@ function handleConnection(player) {
     
 
 function handleDisconnection(code, reason, player) {
-    this.removePlayer(player);
+    this.game.removePlayer(player);
 }
 
 
@@ -46,11 +46,7 @@ function handleMessage(msg, player) {
  * S&G server object prototype.
  */
 const SgServerProto = {
-    minPlayers: 0,
-    maxPlayers: 0,
-    timeout: 0,
-    players: new Set(),
-    shapes: [],
+    game: null,
     server: null,
     
     handleHandshake(data, player) {
@@ -64,16 +60,16 @@ const SgServerProto = {
     
     handleLogin(data, player) {
         if (data.cmd == "LEMMEIN") {
-            if (this.players.size >= this.maxPlayers) {
+            if (this.game.players.size >= this.maxPlayers) {
                 this.sendCommand(player, "FULLHOUSE");
                 player.socket.close();
-            } else if (this.findPlayer(data.data)) {
+            } else if (this.game.findPlayer(data.data)) {
                 this.sendCommand(player, "DOPPELGANGER");
                 player.socket.close();
             } else {
                 player.nick = data.data;
                 this.sendCommand(player, "CMONIN");
-                this.addPlayer(player);
+                this.game.addPlayer(player);
             }
         } else {
             player.socket.close(1002, "Invalid handshake");
@@ -84,11 +80,11 @@ const SgServerProto = {
         switch (data.cmd) {
             case "DOODLE":
                 this.server.broadcastJSON(data, player.socket);
-                this.shapes.push(data.data);
+                this.game.addShape(data.data);
                 break;
             case "OOPS":
                 this.server.broadcastJSON(data, player.socket);
-                this.shapes.splice(-1, 1);
+                this.game.removeShapes(1);
                 break;
             case "QUOTH":
                 this.broadcastCommand("QUOTH", {
@@ -98,11 +94,11 @@ const SgServerProto = {
                 break;
             case "SCRAP":
                 this.server.broadcastJSON(data, player.socket);
-                this.shapes = [];
+                this.game.removeShapes();
                 break;
             case "SEEYA":
                 player.socket.close();
-                this.removePlayer(player);
+                this.game.removePlayer(player);
                 break;
         }
     },
@@ -113,40 +109,6 @@ const SgServerProto = {
     
     broadcastCommand(cmd, data, exclude) {
         this.server.broadcastJSON({ cmd, data }, exclude);
-    },
-    
-    addPlayer(player) {
-        player.status = "online";
-        player.points = 0;
-        this.players.add(player);
-        this.broadcastCommand("PEEKABOO", player.nick, player.socket);
-        this.broadcastCommand("POSSE", this.getPlayers());
-    },
-    
-    removePlayer(player) {
-        this.players.delete(player);
-        this.broadcastCommand("SKEDADDLE", player.nick);
-        this.broadcastCommand("POSSE", this.getPlayers());
-    },
-    
-    findPlayer(nick) {
-        for (let player of this.players) {
-            if (player.nick === nick) {
-                return player;
-            }
-        }
-        return null;
-    },
-    
-    getPlayers() {
-        let players = [];
-        for (let player of this.players) {
-            players.push({
-                nick: player.nick,
-                points: player.points
-            });
-        }
-        return players;
     }
 };
 
@@ -154,24 +116,21 @@ const SgServerProto = {
 /**
  * Creates a new S&G server instance.
  *
- * @param   {http.Server}   httpServer          HTTP server.
+ * @param   {object}        game                S&G game instance.
  * @param   {object}        config              Configuration object:
- * @param   {number}        config.minPlayers     Minimum number of players.
- * @param   {number}        config.maxPlayers     Maximum number of players.
- * @param   {number}        config.timeout        Round timeout in seconds.
+ * @param   {http.Server}   config.httpServer     HTTP server instance.
+ * @param   {number}        config.pingTimeout    Ping timeout in milliseconds.
  *
  * @returns {object}                            S&G server object instance.
  */
-function createServer(httpServer, config) {
+function createServer(game, config) {
     let server = Object.create(SgServerProto);
-    server.minPlayers = config.minPlayers;
-    server.maxPlayers = config.maxPlayers;
-    server.timeout = config.timeout;
-    server.server = wsServer({ server: httpServer }, {
+    server.game = game;
+    server.server = wsServer({ server: config.httpServer }, {
         connectionHandler: handleConnection.bind(server),
         closeHandler: handleDisconnection.bind(server),
         messageHandler: handleMessage.bind(server),
-        timeout: 30000
+        timeout: config.pingTimeout
     });
     return server;
 }
