@@ -5,14 +5,14 @@
 "use strict";
 
 const tap = require("tap");
-const loadModule = require("./setup/loader");
+const Wordlist = require("../src/services/wordlist");
 
 
 var wordlist;
 
 
 tap.beforeEach(function() {
-    wordlist = loadModule("services/wordlist");
+    wordlist = new Wordlist();
     return Promise.resolve();
 });
 
@@ -39,6 +39,16 @@ tap.test("Test wordlist loading from file", function(t) {
     
     let words = wordlist.getWords();
     t.same(words, ["foo", "bar", "baz", "quux"], "wordlist should match file contents");
+    t.end();
+});
+
+
+tap.test("Test wordlist object independence", function(t) {
+    let wordlist2 = new Wordlist();
+    wordlist.load(["foo", "bar", "baz"]);
+    wordlist2.load(["foo", "bar", "baz", "quux"]);
+    
+    t.notSame(wordlist2.getWords(), wordlist.getWords(), "wordlists should be different");
     t.end();
 });
 

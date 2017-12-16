@@ -1,5 +1,5 @@
 /**
- * Wordlist module.
+ * Wordlist manager.
  *
  * @module  src/services/wordlist
  */
@@ -9,32 +9,31 @@
 const fs = require("fs");
 
 
-var words = [];
-var wordBuffer = [];
-
-
-const Wordlist = {
+/**
+ * Wordlist manager object prototype.
+ */
+const WordlistProto = {
     /**
      * Loads a wordlist from file (JSON) or literal array.
      *
      * @param   {string|Array}  src     Filename or array of words.
      */
-    load: function(src) {
+    load(src) {
         if (src instanceof Array) {
-            words = src;
+            this._words = src;
         } else {
-            words = JSON.parse(fs.readFileSync(src, { encoding: "UTF-8" }));
+            this._words = JSON.parse(fs.readFileSync(src, { encoding: "UTF-8" }));
         }
     },
     
     
     /**
-     * Returns the current wordlist.
+     * Returns a copy of the current wordlist.
      *
      * @returns {Array}     The wordlist.
      */
-    getWords: function() {
-        return words.slice();
+    getWords() {
+        return this._words.slice();
     },
     
     
@@ -44,14 +43,27 @@ const Wordlist = {
      *
      * @returns {string}    Next word.
      */
-    getNextWord: function() {
-        if (!wordBuffer.length) {
-            wordBuffer = Wordlist.getWords();
+    getNextWord() {
+        if (!this._wordBuffer.length) {
+            this._wordBuffer = this.getWords();
         }
         
-        return wordBuffer.splice(Math.floor(Math.random() * wordBuffer.length), 1)[0];
+        return this._wordBuffer.splice(Math.floor(Math.random() * this._wordBuffer.length), 1)[0];
     }
 };
+
+
+/**
+ * Constructor function.
+ *
+ * @returns {object}    Wordlist manager object instance.
+ */
+function Wordlist() {
+    let wordlist = Object.create(WordlistProto);
+    wordlist._words = [];
+    wordlist._wordBuffer = [];
+    return wordlist;
+}
 
 
 module.exports = Wordlist;
