@@ -68,7 +68,7 @@ const SgGameProto = {
         player.isDrawing = false;
         this.players.add(player);
         this.drawers.add(player);
-        this.server.broadcastCommand("PEEKABOO", player.nick, player.socket);
+        this.server.broadcastCommand("PEEKABOO", player.nick, player);
         this.server.broadcastCommand("POSSE", this.getPlayerStats());
         
         // send opening messages
