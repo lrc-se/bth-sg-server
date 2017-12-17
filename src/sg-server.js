@@ -16,7 +16,7 @@ function handleConnection(player) {
     
 
 function handleDisconnection(code, reason, player) {
-    this.game.removePlayer(player);
+    this.emit("part", player);
 }
 
 
@@ -46,7 +46,6 @@ function handleMessage(msg, player) {
  * S&G server object prototype.
  */
 const SgServerProto = {
-    game: null,
     server: null,
     
     handleHandshake(data, player) {
@@ -60,17 +59,7 @@ const SgServerProto = {
     
     handleLogin(data, player) {
         if (data.cmd == "LEMMEIN") {
-            if (this.game.players.size >= this.maxPlayers) {
-                this.sendCommand(player, "FULLHOUSE");
-                player.socket.close();
-            } else if (this.game.findPlayer(data.data)) {
-                this.sendCommand(player, "DOPPELGANGER");
-                player.socket.close();
-            } else {
-                player.nick = data.data;
-                this.sendCommand(player, "CMONIN");
-                this.game.addPlayer(player);
-            }
+            this.emit("login", data.data, player);
         } else {
             player.socket.close(1002, "Invalid handshake");
         }
@@ -80,25 +69,23 @@ const SgServerProto = {
         switch (data.cmd) {
             case "DOODLE":
                 this.server.broadcastJSON(data, player.socket);
-                this.game.addShape(data.data);
+                this.emit("draw", data.data);
                 break;
             case "OOPS":
                 this.server.broadcastJSON(data, player.socket);
-                this.game.removeShapes(1);
+                this.emit("undo", 1);
                 break;
             case "QUOTH":
-                this.broadcastCommand("QUOTH", {
-                    nick: player.nick,
-                    text: data.data
-                }, player.socket);
+                this.broadcastCommand("QUOTH", data.data, player.socket);
+                this.emit("msg", data.data.text, player);
                 break;
             case "SCRAP":
                 this.server.broadcastJSON(data, player.socket);
-                this.game.removeShapes();
+                this.emit("undo");
                 break;
             case "SEEYA":
                 player.socket.close();
-                this.game.removePlayer(player);
+                this.emit("part", player);
                 break;
         }
     },
@@ -112,20 +99,21 @@ const SgServerProto = {
     }
 };
 
+// hook into Node's event system
+Object.setPrototypeOf(SgServerProto, require("events").EventEmitter.prototype);
+
 
 /**
  * Creates a new S&G server instance.
  *
- * @param   {object}        game                S&G game instance.
  * @param   {object}        config              Configuration object:
  * @param   {http.Server}   config.httpServer     HTTP server instance.
  * @param   {number}        config.pingTimeout    Ping timeout in milliseconds.
  *
  * @returns {object}                            S&G server object instance.
  */
-function createServer(game, config) {
+function createServer(config) {
     let server = Object.create(SgServerProto);
-    server.game = game;
     server.server = wsServer({ server: config.httpServer }, {
         connectionHandler: handleConnection.bind(server),
         closeHandler: handleDisconnection.bind(server),

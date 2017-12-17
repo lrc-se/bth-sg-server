@@ -21,6 +21,28 @@ const SgGameProto = {
     shapes: [],
     server: null,
     
+    init() {
+        this.server.on("login", this.handleLogin.bind(this));
+        this.server.on("part", this.removePlayer.bind(this));
+        this.server.on("draw", this.addShape.bind(this));
+        this.server.on("undo", this.removeShapes.bind(this));
+        this.server.on("msg", this.checkWord.bind(this));
+    },
+    
+    handleLogin(nick, player) {
+        if (this.players.size >= this.maxPlayers) {
+            this.server.sendCommand(player, "FULLHOUSE");
+            player.socket.close();
+        } else if (this.findPlayer(nick)) {
+            this.server.sendCommand(player, "DOPPELGANGER");
+            player.socket.close();
+        } else {
+            player.nick = nick;
+            this.server.sendCommand(player, "CMONIN");
+            this.addPlayer(player);
+        }
+    },
+    
     addPlayer(player) {
         player.status = "online";
         player.points = 0;
@@ -65,6 +87,10 @@ const SgGameProto = {
         } else {
             this.shapes = [];
         }
+    },
+    
+    checkWord(word, player) {
+        
     }
 };
 
@@ -90,9 +116,10 @@ function createGame(serverConfig, gameConfig) {
     game.timeout = gameConfig.timeout;
     
     // create server
-    let server = SgServer(game, serverConfig);
+    let server = SgServer(serverConfig);
     game.server = server;
     
+    game.init();
     return game;
 }
 
