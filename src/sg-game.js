@@ -157,8 +157,8 @@ const SgGameProto = {
             
             // register points
             let points = 10 * this.countdown / this.timeout + 1;
-            player.points += points;
-            this.curDrawer.points += points / 2;
+            player.points += Math.floor(points);
+            this.curDrawer.points += Math.floor(points / 2);
             
             // announce success and proceed to next word
             this.server.broadcastCommand("GOTIT", {
