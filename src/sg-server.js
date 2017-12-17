@@ -68,19 +68,25 @@ const SgServerProto = {
     handleCommand(data, player) {
         switch (data.cmd) {
             case "DOODLE":
-                this.server.broadcastJSON(data, player.socket);
+                if (player.isDrawing) {
+                    this.server.broadcastJSON(data, player.socket);
+                }
                 this.emit("draw", data.data);
                 break;
             case "OOPS":
-                this.server.broadcastJSON(data, player.socket);
+                if (player.isDrawing) {
+                    this.server.broadcastJSON(data, player.socket);
+                }
                 this.emit("undo", 1);
                 break;
             case "QUOTH":
-                this.broadcastCommand("QUOTH", data.data, player.socket);
+                this.broadcastCommand("QUOTH", data.data, player);
                 this.emit("msg", data.data.text, player);
                 break;
             case "SCRAP":
-                this.server.broadcastJSON(data, player.socket);
+                if (player.isDrawing) {
+                    this.server.broadcastJSON(data, player.socket);
+                }
                 this.emit("undo");
                 break;
             case "SEEYA":
@@ -95,7 +101,11 @@ const SgServerProto = {
     },
     
     broadcastCommand(cmd, data, exclude) {
-        this.server.broadcastJSON({ cmd, data }, exclude);
+        if (exclude) {
+            this.server.broadcastJSON({ cmd, data }, exclude.socket);
+        } else {
+            this.server.broadcastJSON({ cmd, data });
+        }
     }
 };
 
