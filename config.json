@@ -5,7 +5,9 @@
             "port": 1701,
             "minPlayers": 1,
             "maxPlayers": 10,
-            "timeout": 60
+            "timeout": 60,
+            "delay": 3,
+            "wordlist": "./words.json"
         }
     ]
 }
