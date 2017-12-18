@@ -10,16 +10,34 @@
 const wsServer = require("ws-server");
 
 
+/**
+ * Handles player connection.
+ *
+ * @param   {object}    player  Client instance.
+ */
 function handleConnection(player) {
     player.status = "handshake";
 }
-    
 
+
+/**
+ * Handles player disconnection.
+ *
+ * @param   {number}    code    Closing code (not used).
+ * @param   {String}    reason  Closing reason (not used).
+ * @param   {object}    player  Client instance.
+ */
 function handleDisconnection(code, reason, player) {
     this.emit("part", player);
 }
 
 
+/**
+ * Handles incoming player messages.
+ *
+ * @param   {String}    msg     Incoming message.
+ * @param   {object}    player  Client instance.
+ */
 function handleMessage(msg, player) {
     let data;
     try {
@@ -46,8 +64,18 @@ function handleMessage(msg, player) {
  * S&G server object prototype.
  */
 const SgServerProto = {
+    /**
+     * Underlying ws-server instance.
+     */
     server: null,
     
+    
+    /**
+     * Handles handshake messages.
+     *
+     * @param   {object}    data    Message data.
+     * @param   {object}    player  Client instance.
+     */
     handleHandshake(data, player) {
         if (data.cmd == "HOWDY") {
             player.status = "login";
@@ -57,6 +85,13 @@ const SgServerProto = {
         }
     },
     
+    
+    /**
+     * Handles player login attempt.
+     *
+     * @param   {object}    data    Message data.
+     * @param   {object}    player  Client instance.
+     */
     handleLogin(data, player) {
         if (data.cmd == "LEMMEIN") {
             this.emit("login", data.data, player);
@@ -65,6 +100,13 @@ const SgServerProto = {
         }
     },
     
+    
+    /**
+     * Handles player protocol commands.
+     *
+     * @param   {object}    data    Message data.
+     * @param   {object}    player  Client instance.
+     */
     handleCommand(data, player) {
         switch (data.cmd) {
             case "DOODLE":
@@ -96,10 +138,26 @@ const SgServerProto = {
         }
     },
     
+    
+    /**
+     * Sends a protocol command to a specific player.
+     *
+     * @param   {object}    player  Client instance.
+     * @param   {String}    cmd     Command to send.
+     * @param   {object}    [data]  Data payload, if any.
+     */
     sendCommand(player, cmd, data) {
         this.server.sendJSON(player.socket, { cmd, data });
     },
     
+    
+    /**
+     * Sends a protocol command to all connected players.
+     *
+     * @param   {String}    cmd         Command to send.
+     * @param   {object}    [data]      Data payload, if any.
+     * @param   {object}    [exclude]   Client instance to exclude from broadcast, if any.
+     */
     broadcastCommand(cmd, data, exclude) {
         if (exclude) {
             this.server.broadcastJSON({ cmd, data }, exclude.socket);
