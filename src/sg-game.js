@@ -202,9 +202,8 @@ const SgGameProto = {
     },
     
     tick() {
-        if (this.countdown > 0) {
-            this.countdown -= 1;
-        } else {
+        this.countdown -= 1;
+        if (this.countdown < 1) {
             clearInterval(this.timer);
             this.isPaused = true;
             this.server.broadcastCommand("ITSABUST", this.curWord);
