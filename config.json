@@ -1,9 +1,18 @@
 {
+    "port": 1700,
     "pingTimeout": 30000,
     "games": [
         {
             "port": 1701,
             "minPlayers": 1,
+            "maxPlayers": 10,
+            "timeout": 15,
+            "delay": 3,
+            "wordlist": "./words.json"
+        },
+        {
+            "port": 1702,
+            "minPlayers": 2,
             "maxPlayers": 10,
             "timeout": 60,
             "delay": 3,
