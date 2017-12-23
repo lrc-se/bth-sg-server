@@ -1,9 +1,10 @@
 {
   "name": "sg-server",
-  "version": "0.1.3",
+  "version": "0.2.0",
   "description": "Skissa & Gissa server",
   "main": "index.js",
   "scripts": {
+    "start": "node index.js",
     "test": "npm-run-all -c lint tap",
     "test1": "docker-compose run test1",
     "test2": "docker-compose run test2",

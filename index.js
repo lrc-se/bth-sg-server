@@ -42,7 +42,7 @@ fs.readFile(path.join(__dirname, "./config.json"), "utf8", function(err, data) {
             console.error("Invalid config file");
             process.exit(1);
         }
-        if (!cfg.games || !cfg.games.length) {
+        if (!Array.isArray(cfg.games) || !cfg.games.length) {
             console.error("No games specified in config file");
             process.exit(1);
         }
@@ -52,12 +52,13 @@ fs.readFile(path.join(__dirname, "./config.json"), "utf8", function(err, data) {
     }
     
     // create game servers
-    let num = 1;
-    for (let cfg of config.games) {
+    for (let num = 1; num <= config.games.length; ++num) {
+        let cfg = config.games[num - 1];
+        
         // check wordlist
         cfg.wordlist = path.join(__dirname, cfg.wordlist);
         if (!fs.existsSync(cfg.wordlist)) {
-            console.error(`Could not find wordlist for game server #${num++}:`, cfg.wordlist);
+            console.error(`Could not find wordlist for game server #${num}:`, cfg.wordlist);
             continue;
         }
         
@@ -67,16 +68,21 @@ fs.readFile(path.join(__dirname, "./config.json"), "utf8", function(err, data) {
             httpServer: server,
             pingTimeout: config.pingTimeout
         }, cfg);
-        games.push({ server, game });
+        let gameServer = {
+            server: server,
+            game: game,
+            num: num
+        };
+        games.push(gameServer);
         
         // start server
         server.listen(cfg.port, function(err) {
             if (err) {
-                console.error(`Error starting game server #${num++}:`, err);
+                console.error(`Error starting game server #${gameServer.num}:`, err);
                 return;
             }
             console.log(
-                `Game server #${num++} running on port ${cfg.port} ` +
+                `Game server #${gameServer.num} running on port ${cfg.port} ` +
                 `(min: ${cfg.minPlayers}, max: ${cfg.maxPlayers}, timeout: ${cfg.timeout})`
             );
         });
