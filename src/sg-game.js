@@ -15,23 +15,17 @@ const Wordlist = require("./services/wordlist");
  * S&G game object prototype.
  */
 const SgGameProto = {
-    server: null,
-    wordlist: null,
-    
-    minPlayers: 0,
-    maxPlayers: 0,
-    timeout: 0,
-    delay: 0,
-    isPaused: true,
-    players: new Set(),
-    drawers: new Set(),
-    curDrawer: null,
-    curWord: "",
-    shapes: [],
-    countdown: 0,
-    timer: null,
-    
     init(wordlist) {
+        // init properties
+        this.isPaused = true;
+        this.players = new Set();
+        this.drawers = new Set();
+        this.curDrawer = null;
+        this.curWord = "";
+        this.shapes = [];
+        this.countdown = 0;
+        this.timer = null;
+        
         // set up event listeners
         this.server.on("login", this.handleLogin.bind(this));
         this.server.on("part", this.removePlayer.bind(this));
@@ -171,6 +165,8 @@ const SgGameProto = {
     },
     
     nextWord() {
+        this.removeShapes();
+        
         // are there any players left?
         if (!this.players.size) {
             return;

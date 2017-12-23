@@ -183,7 +183,7 @@ Object.setPrototypeOf(SgServerProto, require("events").EventEmitter.prototype);
 function createServer(config) {
     let server = Object.create(SgServerProto);
     server.server = wsServer({ server: config.httpServer }, {
-        connectionHandler: handleConnection.bind(server),
+        connectionHandler: handleConnection,
         closeHandler: handleDisconnection.bind(server),
         messageHandler: handleMessage.bind(server),
         timeout: config.pingTimeout
