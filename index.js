@@ -7,6 +7,7 @@
 "use strict";
 
 const fs = require("fs");
+const path = require("path");
 const http = require("http");
 const SgApp = require("./src/sg-app");
 const SgGame = require("./src/sg-game");
@@ -19,7 +20,9 @@ let config = {
             port: 1701,
             minPlayers: 2,
             maxPlayers: 10,
-            timeout: 60
+            timeout: 60,
+            delay: 3,
+            wordlist: "./words.json"
         }
     ]
 };
@@ -29,7 +32,7 @@ let games = [];
 
 
 // load config
-fs.readFile("./config.json", { encoding: "utf8" }, function(err, data) {
+fs.readFile(path.join(__dirname, "./config.json"), "utf8", function(err, data) {
     // validate config
     if (!err) {
         let cfg = {};
@@ -51,6 +54,13 @@ fs.readFile("./config.json", { encoding: "utf8" }, function(err, data) {
     // create game servers
     let num = 1;
     for (let cfg of config.games) {
+        // check wordlist
+        cfg.wordlist = path.join(__dirname, cfg.wordlist);
+        if (!fs.existsSync(cfg.wordlist)) {
+            console.error(`Could not find wordlist for game server #${num++}:`, cfg.wordlist);
+            continue;
+        }
+        
         // setup
         let server = http.createServer(SgApp());
         let game = SgGame({
