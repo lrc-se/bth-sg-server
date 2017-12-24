@@ -13,6 +13,12 @@ const express = require("express");
 let app = express();
 app.games = [];
 
+// enable CORS for API routes
+app.use("/api", function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    next();
+});
+
 // set up routes
 require("./routes/routes").setup(app);
 
