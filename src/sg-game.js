@@ -9,6 +9,7 @@
 
 const SgServer = require("./sg-server");
 const Wordlist = require("./services/wordlist");
+const repository = require("./services/db-repository");
 
 
 /**
@@ -153,6 +154,7 @@ const SgGameProto = {
             let points = 10 * this.countdown / this.timeout + 1;
             player.points += Math.floor(points);
             this.curDrawer.points += Math.floor(points / 2);
+            this.updateHiscores(player, points);
             
             // announce success and proceed to next word
             this.server.broadcastCommand("GOTIT", {
@@ -205,6 +207,28 @@ const SgGameProto = {
             this.server.broadcastCommand("ITSABUST", this.curWord);
             this.nextWordDelayed();
         }
+    },
+    
+    updateHiscores(player, points) {
+        let drawer = this.curDrawer;
+        let timestamp = +new Date();
+        repository("scores").then(function(scoreRepo) {
+            // update hiscore for guesser nick
+            scoreRepo.collection.updateOne({ nick: player.nick }, {
+                $inc: { score: Math.floor(points) },
+                $set: { timestamp: timestamp }
+            }, { upsert: true }).then(function() {
+                // update hiscore for drawer nick
+                return scoreRepo.collection.updateOne({ nick: drawer.nick }, {
+                    $inc: { score: Math.floor(points / 2) },
+                    $set: { timestamp: timestamp }
+                }, { upsert: true });
+            }).then(function() {
+                scoreRepo.connection.close();
+            }).catch(function() {
+                scoreRepo.connection.close();
+            });
+        });
     }
 };
 
