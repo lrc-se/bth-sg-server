@@ -14,8 +14,8 @@ module.exports = {
         cursor.toArray().then(function(scores) {
             res.json({ data: scores });
             next();
-        }).catch(function(err) {
-            console.error(err);
+        }).catch(function() {
+            res.json({ error: "Kunde inte hämta topplistan från databasen." });
             next();
         });
     }

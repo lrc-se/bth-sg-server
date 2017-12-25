@@ -45,7 +45,9 @@ function createApp(cfg) {
         repository("scores").then(function(scoreRepo) {
             req.scores = scoreRepo;
             next();
-        }).catch(next);
+        }).catch(function() {
+            res.json({ error: "Kunde inte ansluta till databasen." });
+        });
     });
     
     // set up routes
