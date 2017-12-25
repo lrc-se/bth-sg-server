@@ -1,25 +1,12 @@
 version: "3"
 services:
-    test1:
-        build:
-            context: .
-            dockerfile: .docker/Dockerfile-node
-        user: "node"
+    mongodb:
+        image: mongo
+        container_name: "mongodb"
+        environment:
+            - MONGO_DATA_DIR=/data/db
         volumes:
-            - ./:/home/node/app/
-
-    test2:
-        build:
-            context: .
-            dockerfile: .docker/Dockerfile-node8
-        user: "node"
-        volumes:
-            - ./:/home/node/app/
-
-    test3:
-        build:
-            context: .
-            dockerfile: .docker/Dockerfile-node4
-        user: "node"
-        volumes:
-            - ./:/home/node/app/
+            - ./data/db:/data/db
+        ports:
+            - 27017:27017
+        command: mongod

@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "express": "^4.16.2",
+    "mongodb": "^3.0.1",
     "ws-server": "^1.0.0"
   }
 }

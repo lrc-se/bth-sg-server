@@ -1,0 +1,25 @@
+version: "3"
+services:
+    test1:
+        build:
+            context: .
+            dockerfile: .docker/Dockerfile-node
+        user: "node"
+        volumes:
+            - ./:/home/node/app/
+
+    test2:
+        build:
+            context: .
+            dockerfile: .docker/Dockerfile-node8
+        user: "node"
+        volumes:
+            - ./:/home/node/app/
+
+    test3:
+        build:
+            context: .
+            dockerfile: .docker/Dockerfile-node4
+        user: "node"
+        volumes:
+            - ./:/home/node/app/
