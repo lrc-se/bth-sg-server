@@ -10,7 +10,7 @@ const mongo = require("mongodb").MongoClient;
 
 
 // default connection strings
-const defaultDsn = process.env.DBWEBB_DSN || "mongodb://localhost:27017/ramverk2";
+const defaultDsn = process.env.SG_DSN || "mongodb://localhost:27017/sg";
 
 
 /**
@@ -26,7 +26,15 @@ const dbProto = {
     
     
     /**
-     * Cached connection.
+     * Cached client connection.
+     *
+     * @type    {mongodb.MongoClient}
+     */
+    client: null,
+    
+    
+    /**
+     * Cached database connection.
      *
      * @type    {mongodb.Db}
      */
@@ -44,10 +52,11 @@ const dbProto = {
             return Promise.resolve(obj.db);
         }
         
-        return mongo.connect(obj.dsn).then(function(db) {
+        return mongo.connect(obj.dsn).then(function(client) {
             // cache connection for subsequent requests
-            obj.db = db;
-            return db;
+            obj.client = client;
+            obj.db = client.db(obj.dsn.substring(obj.dsn.lastIndexOf("/") + 1));
+            return obj.db;
         });
     },
     
@@ -58,8 +67,8 @@ const dbProto = {
      * @returns {Promise}
      */
     close: function close() {
-        if (this.db) {
-            return this.db.close();
+        if (this.client) {
+            return this.client.close();
         }
         
         return Promise.resolve();
