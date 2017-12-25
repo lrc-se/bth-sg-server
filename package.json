@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
+    "reset-db": "node reset-db.js",
     "test": "npm-run-all -c lint tap",
     "test1": "docker-compose run test1",
     "test2": "docker-compose run test2",
