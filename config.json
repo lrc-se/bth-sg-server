@@ -1,6 +1,7 @@
 {
     "port": 1700,
     "pingTimeout": 30000,
+    "cors": true,
     "games": [
         {
             "port": 1701,

@@ -9,6 +9,7 @@
 const fs = require("fs");
 const path = require("path");
 const http = require("http");
+const SgApp = require("./src/sg-app");
 const SgGame = require("./src/sg-game");
 
 
@@ -16,6 +17,7 @@ const SgGame = require("./src/sg-game");
 let config = {
     port: 1700,
     pingTimeout: 30000,
+    cors: true,
     games: [
         {
             port: 1701,
@@ -50,7 +52,7 @@ fs.readFile(path.join(__dirname, "./config.json"), "utf8", function(err, data) {
     }
     
     // create and start main server
-    const app = require("./src/sg-app");
+    const app = SgApp({ cors: config.cors });
     const server = http.createServer(app);
     server.listen(config.port, function(err) {
         if (err) {
