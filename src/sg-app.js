@@ -7,6 +7,7 @@
 "use strict";
 
 const express = require("express");
+const repository = require("./services/db-repository");
 
 
 /**
@@ -39,8 +40,21 @@ function createApp(cfg) {
         });
     }
     
+    // set up database connection
+    app.use("/api/scores", function(req, res, next) {
+        repository("scores").then(function(scoreRepo) {
+            req.scores = scoreRepo;
+            next();
+        }).catch(next);
+    });
+    
     // set up routes
     require("./routes/routes").setup(app);
+    
+    // tear down database connection
+    app.use("/api/scores", function(req) {
+        req.scores.connection.close();
+    });
     
     // set up 404
     app.use(function(req, res, next) {
