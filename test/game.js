@@ -281,7 +281,7 @@ tap.test("Test game round", function(t) {
                     if (data2.cmd == "YOUREIT") {
                         word = data2.data;
                     } else if (data2.cmd == "CMONIN") {
-                        sockets[1].sendCmd("DOODLE", shape);
+                        sockets[0].sendCmd("DOODLE", shape);
                         let isPlaying = false;
                         let status = 0;
                         connect("luser", function(data3) {
