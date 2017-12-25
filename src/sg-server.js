@@ -56,6 +56,8 @@ function handleMessage(msg, player) {
         case "online":
             this.handleCommand(data, player);
             break;
+        default:
+            // NOOP
     }
 }
 
@@ -108,33 +110,37 @@ const SgServerProto = {
      * @param   {object}    player  Client instance.
      */
     handleCommand(data, player) {
+        // general commands
         switch (data.cmd) {
-            case "DOODLE":
-                if (player.isDrawing) {
-                    this.server.broadcastJSON(data, player.socket);
-                }
-                this.emit("draw", data.data);
-                break;
-            case "OOPS":
-                if (player.isDrawing) {
-                    this.server.broadcastJSON(data, player.socket);
-                }
-                this.emit("undo", 1);
-                break;
             case "QUOTH":
                 this.broadcastCommand("QUOTH", data.data, player);
                 this.emit("msg", data.data.text, player);
-                break;
-            case "SCRAP":
-                if (player.isDrawing) {
-                    this.server.broadcastJSON(data, player.socket);
-                }
-                this.emit("undo");
                 break;
             case "SEEYA":
                 player.socket.close();
                 this.emit("part", player);
                 break;
+            default: {
+                // drawer-only commands
+                if (player.isDrawing) {
+                    switch (data.cmd) {
+                        case "DOODLE":
+                            this.server.broadcastJSON(data, player.socket);
+                            this.emit("draw", data.data);
+                            break;
+                        case "OOPS":
+                            this.server.broadcastJSON(data, player.socket);
+                            this.emit("undo", 1);
+                            break;
+                        case "SCRAP":
+                            this.server.broadcastJSON(data, player.socket);
+                            this.emit("undo");
+                            break;
+                        default:
+                            // NOOP
+                    }
+                }
+            }
         }
     },
     
