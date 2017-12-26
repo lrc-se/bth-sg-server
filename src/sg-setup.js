@@ -250,6 +250,16 @@ function stop() {
 
 
 /**
+ * Returns running games.
+ *
+ * @returns {?Array}    Array of game server objects, or null if application not started.
+ */
+function getGames() {
+    return (app ? app.locals.games : null);
+}
+
+
+/**
  * Module interface.
  */
 let SgSetup = {
@@ -260,7 +270,8 @@ let SgSetup = {
     
     // methods
     start: start,
-    stop: stop
+    stop: stop,
+    getGames: getGames
 };
 
 
