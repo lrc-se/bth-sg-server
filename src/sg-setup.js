@@ -31,6 +31,9 @@ let config = {
 // Express app instance
 let app;
 
+// main HTTP server
+let server;
+
 // root directory
 let rootDir;
 
@@ -39,52 +42,79 @@ let logLevel;
 
 
 /**
- * Parses and applies configuration (callback to fs.readFile).
+ * Loads configuration from file.
  *
- * @param   {Error}     err     Error object.
- * @param   {string}    data    Config file data.
+ * @param   {string}    configFile  Path to configuration file.
+ *
+ * @returns {Promise}               Promise resolving when configuration has been loaded,
+ *                                  rejecting with truthy argument on fatal failure.
  */
-function parseConfig(err, data) {
-    // validate config
-    if (!err) {
-        let cfg = {};
-        try {
-            cfg = JSON.parse(data);
-        } catch (ex) {
-            log("Invalid config file", SgSetup.LOG_ERROR);
-            process.exit(1);
-        }
-        if (!Array.isArray(cfg.games) || !cfg.games.length) {
-            log("No games specified in config file", SgSetup.LOG_ERROR);
-            process.exit(1);
-        }
-        Object.assign(config, cfg);
-    } else {
-        log("Config file not found", SgSetup.LOG_ERROR);
-        process.exit(1);
-    }
-    
-    // let's go
-    startServers();
+function loadConfig(configFile) {
+    return new Promise(function(resolve, reject) {
+        fs.readFile(path.join(rootDir, configFile), "utf8", function(err, data) {
+            // validate config
+            if (!err) {
+                let cfg = {};
+                try {
+                    cfg = JSON.parse(data);
+                } catch (ex) {
+                    log("Invalid config file", SgSetup.LOG_ERROR);
+                    return reject(true);
+                }
+                if (!Array.isArray(cfg.games) || !cfg.games.length) {
+                    log("No games specified in config file", SgSetup.LOG_ERROR);
+                    return reject(true);
+                }
+                
+                Object.assign(config, cfg);
+                resolve();
+            } else {
+                log("Config file not found", SgSetup.LOG_ERROR);
+                reject(true);
+            }
+        });
+    });
 }
 
 
 /**
  * Starts all servers.
+ *
+ * @returns {Promise}   Promise resolving when all servers have started, rejecting on failure
+ *                      (with truthy argument if fatal).
  */
 function startServers() {
-    // create and start main server
-    app = SgApp({ cors: config.cors });
-    const server = http.createServer(app);
-    server.listen(config.port, function(err) {
-        if (err) {
-            log(`Error starting main server: ${err}`, SgSetup.LOG_ERROR);
-            return;
-        }
-        log(`Main server running on port ${config.port}`, SgSetup.LOG_MSG);
-        
-        // create game servers
-        config.games.forEach(startGameServer);
+    return new Promise(function(resolve, reject) {
+        // create and start main server
+        app = SgApp({ cors: config.cors });
+        server = http.createServer(app);
+        server.listen(config.port, function(err) {
+            if (err) {
+                log(`Error starting main server: ${err}`, SgSetup.LOG_ERROR);
+                return reject(true);
+            }
+            log(`Main server running on port ${config.port}`, SgSetup.LOG_MSG);
+            
+            // create game servers
+            let counter = 0;
+            let failed = false;
+            for (let num = 1; num <= config.games.length; ++num) {
+                startGameServer(config.games[num - 1], num).then(check).catch(function() {
+                    failed = true;
+                    check();
+                });
+            }
+
+            function check() {
+                if (++counter >= config.games.length) {
+                    if (!failed) {
+                        resolve();
+                    } else {
+                        reject();
+                    }
+                }
+            }
+        });
     });
 }
 
@@ -93,44 +123,52 @@ function startServers() {
  * Starts a game server.
  *
  * @param   {object}    cfg     Configuration object for game server (see module defaults).
- * @param   {number}    idx     Game index (0-based).
+ * @param   {number}    num     Game index (1-based).
+ *
+ * @returns {Promise}           Promise resolving when game server has started,
+ *                              rejecting on failure.
  */
-function startGameServer(cfg, idx) {
-    let num = idx + 1;
-    
-    // check wordlist
-    cfg.wordlist = path.join(rootDir, cfg.wordlist);
-    if (!fs.existsSync(cfg.wordlist)) {
-        log(`Could not find wordlist for game server #${num}: ${cfg.wordlist}`, SgSetup.LOG_ERROR);
-        return;
-    }
-    
-    // setup
-    let server = http.createServer();
-    let game = SgGame({
-        httpServer: server,
-        pingTimeout: config.pingTimeout
-    }, cfg);
-    let gameServer = {
-        name: cfg.name,
-        server: server,
-        port: cfg.port,
-        game: game,
-        num: num
-    };
-    app.sgGames.push(gameServer);
-    
-    // start server
-    server.listen(cfg.port, function(err) {
-        if (err) {
-            log(`Error starting game server #${gameServer.num}: ${err}`, SgSetup.LOG_ERROR);
-            return;
+function startGameServer(cfg, num) {
+    return new Promise(function(resolve, reject) {
+        // check wordlist
+        cfg.wordlist = path.join(rootDir, cfg.wordlist);
+        if (!fs.existsSync(cfg.wordlist)) {
+            log(
+                `Could not find wordlist for game server #${num}: ${cfg.wordlist}`,
+                SgSetup.LOG_ERROR
+            );
+            return reject();
         }
-        log(
-            `Game server #${gameServer.num} running on port ${cfg.port} ` +
-            `(min: ${cfg.minPlayers}, max: ${cfg.maxPlayers}, timeout: ${cfg.timeout})`,
-            SgSetup.LOG_MSG
-        );
+        
+        // setup
+        let server = http.createServer();
+        let game = SgGame({
+            httpServer: server,
+            pingTimeout: config.pingTimeout
+        }, cfg);
+        let gameServer = {
+            name: cfg.name,
+            server: server,
+            port: cfg.port,
+            game: game,
+            num: num
+        };
+        app.locals.games.push(gameServer);
+        
+        // start server
+        server.listen(cfg.port, function(err) {
+            if (err) {
+                log(`Error starting game server #${gameServer.num}: ${err}`, SgSetup.LOG_ERROR);
+                return reject();
+            }
+            
+            log(
+                `Game server #${gameServer.num} running on port ${cfg.port} ` +
+                `(min: ${cfg.minPlayers}, max: ${cfg.maxPlayers}, timeout: ${cfg.timeout})`,
+                SgSetup.LOG_MSG
+            );
+            resolve();
+        });
     });
 }
 
@@ -161,6 +199,9 @@ function log(msg, level) {
  * @param   {string}    [cfg.rootDir]         Root directory for relative paths.
  * @param   {number}    [cfg.logLevel]        Logging level (see module export for constants).
  * @param   {string}    [cfg.configFile]      Path to configuration file.
+ *
+ * @returns {Promise}                       Promise resolving when all servers have started,
+ *                                          rejecting on failure (with truthy argument if fatal).
  */
 function start(cfg) {
     cfg = cfg || {};
@@ -169,13 +210,35 @@ function start(cfg) {
     rootDir = (typeof cfg.rootDir != "undefined" ? cfg.rootDir : ".");
     logLevel = (typeof cfg.logLevel != "undefined" ? cfg.logLevel : SgSetup.LOG_MSG);
     
-    // load config, if specified
+    // start servers
     if (typeof cfg.configFile != "undefined") {
-        fs.readFile(path.join(rootDir, cfg.configFile), "utf8", parseConfig);
+        // load config from file
+        return loadConfig(cfg.configFile).then(startServers);
     } else {
+        // use default config
         log("No config file specified; using defaults", SgSetup.LOG_MSG);
-        startServers();
+        return startServers();
     }
+}
+
+
+/**
+ * Stops all server instances.
+ *
+ * @returns {Promise}   Promise resolving when all servers have stopped.
+ */
+function stop() {
+    return new Promise(function(resolve) {
+        let counter = 0;
+        for (let game of app.locals.games) {
+            game.game.stop();
+            game.server.close(function() {
+                if (++counter >= app.locals.games.length) {
+                    server.close(resolve);
+                }
+            });
+        }
+    });
 }
 
 
@@ -189,7 +252,8 @@ let SgSetup = {
     LOG_MSG: 2,
     
     // methods
-    start: start
+    start: start,
+    stop: stop
 };
 
 

@@ -245,6 +245,12 @@ const SgGameProto = {
                 callback(false);
             }
         });
+    },
+    
+    stop() {
+        for (let player of this.players) {
+            player.socket.close();
+        }
     }
 };
 
