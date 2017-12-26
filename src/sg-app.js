@@ -22,7 +22,7 @@ const repository = require("./services/db-repository");
 function createApp(cfg) {
     // init
     let app = express();
-    app.games = [];
+    app.sgGames = [];
     
     // handle CORS for API routes
     if (cfg.cors) {
@@ -43,7 +43,7 @@ function createApp(cfg) {
     // set up database connection
     app.use("/api/scores", function(req, res, next) {
         repository("scores").then(function(scoreRepo) {
-            req.scores = scoreRepo;
+            req.sgScores = scoreRepo;
             next();
         }).catch(function() {
             res.json({ error: "Kunde inte ansluta till databasen." });
@@ -55,7 +55,7 @@ function createApp(cfg) {
     
     // tear down database connection
     app.use("/api/scores", function(req) {
-        req.scores.connection.close();
+        req.sgScores.connection.close();
     });
     
     // set up 404
