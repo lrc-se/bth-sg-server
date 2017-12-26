@@ -11,7 +11,7 @@ module.exports = {
      */
     index(req, res) {
         let games = [];
-        for (let game of req.app.sgGames) {
+        for (let game of req.app.locals.games) {
             games.push({
                 name: game.name || "",
                 port: game.port,

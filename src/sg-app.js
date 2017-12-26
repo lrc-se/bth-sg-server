@@ -22,7 +22,7 @@ const repository = require("./services/db-repository");
 function createApp(cfg) {
     // init
     let app = express();
-    app.sgGames = [];
+    app.locals.games = [];
     
     // handle CORS for API routes
     if (cfg.cors) {
