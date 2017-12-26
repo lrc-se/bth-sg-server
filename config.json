@@ -9,7 +9,8 @@
             "maxPlayers": 10,
             "timeout": 15,
             "delay": 3,
-            "wordlist": "./words.json"
+            "wordlist": "./words.json",
+            "saveScores": true
         },
         {
             "port": 1702,
@@ -17,7 +18,8 @@
             "maxPlayers": 10,
             "timeout": 60,
             "delay": 3,
-            "wordlist": "./words.json"
+            "wordlist": "./words.json",
+            "saveScores": true
         }
     ]
 }

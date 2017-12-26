@@ -23,7 +23,8 @@ function startGame(cfg) {
             maxPlayers: cfg.maxPlayers || 10,
             timeout: cfg.timeout || 60,
             delay: cfg.delay || 3,
-            wordlist: "./words.json"
+            wordlist: "./words.json",
+            saveScores: cfg.saveScores || false
         });
         server.listen(port, function(err) {
             if (err) {

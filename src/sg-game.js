@@ -26,6 +26,8 @@ const SgGameProto = {
         this.shapes = [];
         this.countdown = 0;
         this.timer = null;
+        this.delay = 0;
+        this.saveScores = false;
         
         // set up event listeners
         this.server.on("login", this.handleLogin.bind(this));
@@ -154,7 +156,9 @@ const SgGameProto = {
             let points = 10 * this.countdown / this.timeout + 1;
             player.points += Math.floor(points);
             this.curDrawer.points += Math.floor(points / 2);
-            this.updateHiscores(player, points);
+            if (this.saveScores) {
+                this.updateHiscores(player, points);
+            }
             
             // announce success and proceed to next word
             this.server.broadcastCommand("GOTIT", {
@@ -212,6 +216,8 @@ const SgGameProto = {
     updateHiscores(player, points) {
         let drawer = this.curDrawer;
         let timestamp = +new Date();
+        let callback = (typeof this.saveScores == "function" ? this.saveScores : null);
+        
         repository("scores").then(function(scoreRepo) {
             // update hiscore for guesser nick
             scoreRepo.collection.updateOne({ nick: player.nick }, {
@@ -225,9 +231,19 @@ const SgGameProto = {
                 }, { upsert: true });
             }).then(function() {
                 scoreRepo.connection.close();
+                if (callback) {
+                    callback(true);
+                }
             }).catch(function() {
                 scoreRepo.connection.close();
+                if (callback) {
+                    callback(false);
+                }
             });
+        }).catch(function() {
+            if (callback) {
+                callback(false);
+            }
         });
     }
 };
@@ -236,17 +252,19 @@ const SgGameProto = {
 /**
  * Creates a new S&G game.
  *
- * @param   {object}        serverConfig                Configuration object for game server:
- * @param   {http.Server}   serverConfig.httpServer       HTTP server.
- * @param   {number}        serverConfig.pingTimeout      Ping timeout in milliseconds.
- * @param   {object}        gameConfig                  Configuration object for game runner:
- * @param   {number}        gameConfig.minPlayers         Minimum number of players.
- * @param   {number}        gameConfig.maxPlayers         Maximum number of players.
- * @param   {number}        gameConfig.timeout            Round timeout in seconds.
- * @param   {number}        gameConfig.delay              Delay between words in seconds.
- * @param   {String}        gameConfig.wordlist           Path to wordlist file.
+ * @param   {object}                serverConfig                Configuration for game server:
+ * @param   {http.Server}           serverConfig.httpServer       HTTP server.
+ * @param   {number}                serverConfig.pingTimeout      Ping timeout in milliseconds.
+ * @param   {object}                gameConfig                  Configuration for game runner:
+ * @param   {number}                gameConfig.minPlayers         Minimum number of players.
+ * @param   {number}                gameConfig.maxPlayers         Maximum number of players.
+ * @param   {number}                gameConfig.timeout            Round timeout in seconds.
+ * @param   {number}                gameConfig.delay              Delay between words in seconds.
+ * @param   {String}                gameConfig.wordlist           Path to wordlist file.
+ * @param   {(boolean|function)}    gameConfig.saveScores         Truthy to save scores in database,
+ *                                                                invoking callback if callable.
  *
- * @returns {object}                                    S&G game runner object instance.
+ * @returns {object}                                            S&G game runner object instance.
  */
 function createGame(serverConfig, gameConfig) {
     // create game
@@ -255,6 +273,7 @@ function createGame(serverConfig, gameConfig) {
     game.maxPlayers = gameConfig.maxPlayers;
     game.timeout = gameConfig.timeout;
     game.delay = gameConfig.delay;
+    game.saveScores = gameConfig.saveScores;
     
     // create server
     let server = SgServer(serverConfig);
