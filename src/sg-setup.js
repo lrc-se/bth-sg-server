@@ -229,6 +229,13 @@ function start(cfg) {
  */
 function stop() {
     return new Promise(function(resolve) {
+        if (!app || !server) {
+            return resolve();
+        }
+        if (!app.locals.games.length) {
+            server.close(resolve);
+        }
+        
         let counter = 0;
         for (let game of app.locals.games) {
             game.game.stop();
