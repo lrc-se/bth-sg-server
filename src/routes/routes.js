@@ -9,12 +9,8 @@
 // route definitions
 var routes = [
     {
-        base: "/api/games",
-        file: "games"
-    },
-    {
-        base: "/api/scores",
-        file: "scores"
+        base: "/api",
+        file: "api"
     }
 ];
 

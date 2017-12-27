@@ -13,6 +13,7 @@ const SgGame = require("./sg-game");
 
 // default config
 let config = {
+    name: "Skissa & Gissa",
     port: 1700,
     pingTimeout: 30000,
     cors: true,
@@ -87,6 +88,7 @@ function startServers() {
     return new Promise(function(resolve, reject) {
         // create and start main server
         app = SgApp({ cors: config.cors });
+        app.locals.name = config.name;
         server = http.createServer(app);
         server.listen(config.port, function(err) {
             if (err) {
