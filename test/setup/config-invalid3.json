@@ -1,0 +1,23 @@
+{
+    "port": 1700,
+    "games": [
+        {
+            "name": "Test1",
+            "port": 1701,
+            "minPlayers": 2,
+            "maxPlayers": 10,
+            "timeout": 15,
+            "delay": 3,
+            "wordlist": "./setup/words.json"
+        },
+        {
+            "name": "test 2",
+            "port": 1702,
+            "minPlayers": 3,
+            "maxPlayers": 15,
+            "timeout": 60,
+            "delay": 2,
+            "wordlist": "./setup/words.foo"
+        }
+    ]
+}
