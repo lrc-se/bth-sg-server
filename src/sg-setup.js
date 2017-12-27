@@ -43,6 +43,22 @@ let logLevel;
 
 
 /**
+ * Module interface.
+ */
+let SgSetup = {
+    // constants
+    LOG_NONE: 0,
+    LOG_ERROR: 1,
+    LOG_MSG: 2,
+    
+    // methods
+    start: start,
+    stop: stop,
+    getGames: getGames
+};
+
+
+/**
  * Loads configuration from file.
  *
  * @param   {string}    configFile  Path to configuration file.
@@ -55,7 +71,7 @@ function loadConfig(configFile) {
         fs.readFile(path.join(rootDir, configFile), "utf8", function(err, data) {
             // validate config
             if (!err) {
-                let cfg = {};
+                let cfg;
                 try {
                     cfg = JSON.parse(data);
                 } catch (ex) {
@@ -259,22 +275,6 @@ function stop() {
 function getGames() {
     return (app ? app.locals.games : null);
 }
-
-
-/**
- * Module interface.
- */
-let SgSetup = {
-    // constants
-    LOG_NONE: 0,
-    LOG_ERROR: 1,
-    LOG_MSG: 2,
-    
-    // methods
-    start: start,
-    stop: stop,
-    getGames: getGames
-};
 
 
 module.exports = SgSetup;
