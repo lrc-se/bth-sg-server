@@ -9,7 +9,7 @@
 
 const SgServer = require("./sg-server");
 const Wordlist = require("./services/wordlist");
-const repository = require("./services/db-repository");
+const hiscores = require("./services/hiscores");
 
 
 /**
@@ -26,8 +26,6 @@ const SgGameProto = {
         this.shapes = [];
         this.countdown = 0;
         this.timer = null;
-        this.delay = 0;
-        this.saveScores = false;
         
         // set up event listeners
         this.server.on("login", this.handleLogin.bind(this));
@@ -156,8 +154,15 @@ const SgGameProto = {
             let points = 10 * this.countdown / this.timeout + 1;
             player.points += Math.floor(points);
             this.curDrawer.points += Math.floor(points / 2);
+            
+            // save hiscores
             if (this.saveScores) {
-                this.updateHiscores(player, points);
+                let callback = (typeof this.saveScores == "function" ? this.saveScores : null);
+                hiscores.update(player.nick, this.curDrawer.nick, points).then(function() {
+                    callback && callback(true);
+                }).catch(function() {
+                    callback && callback(false);
+                });
             }
             
             // announce success and proceed to next word
@@ -211,40 +216,6 @@ const SgGameProto = {
             this.server.broadcastCommand("ITSABUST", this.curWord);
             this.nextWordDelayed();
         }
-    },
-    
-    updateHiscores(player, points) {
-        let drawer = this.curDrawer;
-        let timestamp = +new Date();
-        let callback = (typeof this.saveScores == "function" ? this.saveScores : null);
-        
-        repository("scores").then(function(scoreRepo) {
-            // update hiscore for guesser nick
-            scoreRepo.collection.updateOne({ nick: player.nick }, {
-                $inc: { score: Math.floor(points) },
-                $set: { timestamp: timestamp }
-            }, { upsert: true }).then(function() {
-                // update hiscore for drawer nick
-                return scoreRepo.collection.updateOne({ nick: drawer.nick }, {
-                    $inc: { score: Math.floor(points / 2) },
-                    $set: { timestamp: timestamp }
-                }, { upsert: true });
-            }).then(function() {
-                scoreRepo.connection.close();
-                if (callback) {
-                    callback(true);
-                }
-            }).catch(function() {
-                scoreRepo.connection.close();
-                if (callback) {
-                    callback(false);
-                }
-            });
-        }).catch(function() {
-            if (callback) {
-                callback(false);
-            }
-        });
     },
     
     stop() {

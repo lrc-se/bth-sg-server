@@ -7,7 +7,7 @@
 "use strict";
 
 const express = require("express");
-const repository = require("./services/db-repository");
+//const repository = require("./services/db-repository");
 
 
 /**
@@ -40,23 +40,8 @@ function createApp(cfg) {
         });
     }
     
-    // set up database connection
-    app.use("/api/scores", function(req, res, next) {
-        repository("scores").then(function(scoreRepo) {
-            req.sgScores = scoreRepo;
-            next();
-        }).catch(function() {
-            res.json({ error: "Kunde inte ansluta till databasen." });
-        });
-    });
-    
     // set up routes
     require("./routes/routes").setup(app);
-    
-    // tear down database connection
-    app.use("/api/scores", function(req) {
-        req.sgScores.connection.close();
-    });
     
     // set up 404
     app.use(function(req, res, next) {

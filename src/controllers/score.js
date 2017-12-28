@@ -4,19 +4,24 @@
 
 "use strict";
 
+const hiscores = require("../services/hiscores");
+
 
 module.exports = {
     /**
      * Hiscore index.
      */
-    index(req, res, next) {
-        let cursor = req.sgScores.retrieve().project({ _id: false }).sort("score", -1).limit(10);
-        cursor.toArray().then(function(scores) {
+    index(req, res) {
+        hiscores.getTop(10).then(function(scores) {
             res.json({ data: scores });
-            next();
-        }).catch(function() {
-            res.json({ error: "Kunde inte hämta topplistan från databasen." });
-            next();
+        }).catch(function(err) {
+            let msg;
+            if (err.name == "MongoNetworkError") {
+                msg = "Kunde inte ansluta till databasen.";
+            } else {
+                msg = "Kunde inte hämta topplistan från databasen.";
+            }
+            res.json({ error: msg });
         });
     }
 };
