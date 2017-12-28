@@ -13,7 +13,6 @@ const SgGame = require("./sg-game");
 
 // default config
 let config = {
-    name: "Skissa & Gissa",
     port: 1700,
     pingTimeout: 30000,
     cors: true,
