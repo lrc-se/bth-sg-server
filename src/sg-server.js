@@ -121,27 +121,39 @@ const SgServerProto = {
                 this.emit("part", player);
                 break;
             default: {
-                // drawer-only commands
+                // check for drawer-only commands
                 if (player.isDrawing) {
-                    switch (data.cmd) {
-                        case "DOODLE":
-                            this.server.broadcastJSON(data, player.socket);
-                            this.emit("draw", data.data);
-                            break;
-                        case "OOPS":
-                            this.server.broadcastJSON(data, player.socket);
-                            this.emit("undo", 1);
-                            break;
-                        case "SCRAP":
-                            this.server.broadcastJSON(data, player.socket);
-                            this.emit("undo");
-                            break;
-                        default:
-                            // NOOP
-                    }
+                    this.handleDrawerCommand(data, player);
                 }
             }
         }
+    },
+    
+    
+    /**
+     * Handles protocol commands from drawing player.
+     *
+     * @param   {object}    data    Message data.
+     * @param   {object}    player  Client instance.
+     */
+    handleDrawerCommand(data, player) {
+        switch (data.cmd) {
+            case "DOODLE":
+                this.emit("draw", data.data);
+                break;
+            case "OOPS":
+                this.emit("undo", 1);
+                break;
+            case "SCRAP":
+                this.emit("undo");
+                break;
+            default:
+                // unknown command
+                return;
+        }
+        
+        // command recognized, so relay it
+        this.server.broadcastJSON(data, player.socket);
     },
     
     
