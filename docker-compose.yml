@@ -10,3 +10,43 @@ services:
         ports:
             - 27017:27017
         command: mongod
+
+    sg_server:
+        image: "node:alpine"
+        working_dir: /home/node/app/
+        environment:
+            - SG_DSN=mongodb://mongodb:27017/sg
+        volumes:
+            - ./:/home/node/app/
+        ports:
+            - "1700-1799:1700-1799"
+        links:
+            - mongodb
+        command: "npm start"
+
+    test:
+        image: "node:alpine"
+        working_dir: /home/node/app/
+        volumes:
+            - ./:/home/node/app/
+        ports:
+            - "1700-1799:1700-1799"
+        command: "sh test/test.sh"
+        
+    test1:
+        image: "node:8-alpine"
+        working_dir: /home/node/app/
+        volumes:
+            - ./:/home/node/app/
+        ports:
+            - "1700-1799:1700-1799"
+        command: "sh test/test.sh"
+        
+    test2:
+        image: "node:6-alpine"
+        working_dir: /home/node/app/
+        volumes:
+            - ./:/home/node/app/
+        ports:
+            - "1700-1799:1700-1799"
+        command: "sh test/test.sh"
