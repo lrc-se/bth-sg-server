@@ -38,7 +38,7 @@ const repoProto = {
      *
      * @returns {Promise}           Promise with retrieved document as value.
      */
-    find: function find(key, value) {
+    find(key, value) {
         let query;
         if (key) {
             query = {};
@@ -61,10 +61,10 @@ const repoProto = {
      * @param   {object}    [query]         Query object.
      * @param   {boolean}   [fetch]         Whether to fetch the results into memory.
      *
-     * @returns {mongodb.Cursor|Promise}    Cursor object or Promise with array of fetched 
+     * @returns {(mongodb.Cursor|Promise)}  Cursor object or Promise with array of fetched
      *                                      documents as value.
      */
-    retrieve: function retrieve(query, fetch) {
+    retrieve(query, fetch) {
         let cursor = this.collection.find(query);
         return (fetch ? cursor.toArray() : cursor);
     },
@@ -77,7 +77,7 @@ const repoProto = {
      *
      * @returns {Promise}           Promise with operation result object as value.
      */
-    save: function save(obj) {
+    save(obj) {
         if (obj._id) {
             let props = {};
             Object.assign(props, obj);
@@ -96,7 +96,7 @@ const repoProto = {
      *
      * @returns {Promise}           Promise with operation result object as value.
      */
-    remove: function remove(obj) {
+    remove(obj) {
         return this.collection.deleteOne({ _id: Id(obj._id) }).then(function(res) {
             if (res.deletedCount == 1) {
                 delete obj._id;
@@ -113,7 +113,7 @@ const repoProto = {
      *
      * @returns {Promise}               Promise with document count as value.
      */
-    count: function count(query) {
+    count(query) {
         return this.collection.count(query);
     }
 };

@@ -10,7 +10,7 @@ const gameController = require("../controllers/game");
 const scoreController = require("../controllers/score");
 
 
-var router = express.Router();
+let router = express.Router();
 
 
 /**

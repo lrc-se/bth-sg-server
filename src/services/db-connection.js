@@ -46,7 +46,7 @@ const dbProto = {
      *
      * @returns {Promise}   Promise with active connection as value.
      */
-    connect: function connect() {
+    connect() {
         let obj = this;
         if (obj.db) {
             return Promise.resolve(obj.db);
@@ -66,7 +66,7 @@ const dbProto = {
      *
      * @returns {Promise}
      */
-    close: function close() {
+    close() {
         if (this.client) {
             return this.client.close();
         }

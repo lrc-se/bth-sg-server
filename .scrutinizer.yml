@@ -8,13 +8,13 @@ filter:
 
 build:
     dependencies:
-        after:
-            - npm install tap
+        override:
+            - npm install
             
     tests:
         override:
             -
-                command: "npm run tap-clover"
+                command: "npm run unit-clover"
                 coverage:
                     file: "build/coverage/clover.xml"
                     format: "clover"

@@ -16,7 +16,7 @@ const WordlistProto = {
     /**
      * Loads a wordlist from file (JSON) or literal array.
      *
-     * @param   {string|Array}  src     Filename or array of words.
+     * @param   {(string|Array)}    src     Filename or array of words.
      */
     load(src) {
         if (src instanceof Array) {

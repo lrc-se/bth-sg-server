@@ -13,6 +13,7 @@ services:
 
     sg_server:
         image: "node:alpine"
+        container_name: "sg_server"
         working_dir: /home/node/app/
         environment:
             - SG_DSN=mongodb://mongodb:27017/sg

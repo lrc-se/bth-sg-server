@@ -6,8 +6,9 @@
 
 "use strict";
 
+
 // route definitions
-var routes = [
+let routes = [
     {
         base: "/api",
         file: "api"

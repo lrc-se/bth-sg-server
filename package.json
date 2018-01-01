@@ -1,21 +1,21 @@
 {
   "name": "sg-server",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Skissa & Gissa server",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
     "start-docker": "docker-compose up -d sg_server",
     "stop-docker": "docker-compose down",
+    "mongodb": "docker-compose up mongodb",
     "reset-db": "node reset-db.js",
-    "test": "npm-run-all -c lint tap",
+    "test": "npm-run-all -c lint unit",
     "test-docker": "docker-compose run test",
     "test-docker1": "docker-compose run test1",
     "test-docker2": "docker-compose run test2",
-    "tap": "tap -c --reporter=spec --coverage --coverage-report=html --no-browser test/*.js",
-    "tap-clover": "tap --reporter=tap --coverage --coverage-report=clover test/*.js",
-    "eslint": "eslint .",
-    "lint": "npm-run-all -c eslint"
+    "unit": "tap -c --reporter=spec --coverage --coverage-report=html --no-browser test/*.js",
+    "unit-clover": "tap --reporter=tap --coverage --coverage-report=clover test/*.js",
+    "lint": "eslint ."
   },
   "author": "LRC",
   "license": "",
