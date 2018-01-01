@@ -5,20 +5,32 @@
     "cors": true,
     "games": [
         {
+            "name": "Långsam",
             "port": 1701,
-            "minPlayers": 1,
+            "minPlayers": 2,
             "maxPlayers": 10,
-            "timeout": 15,
+            "timeout": 90,
+            "delay": 4,
+            "wordlist": "./words.json",
+            "saveScores": true
+        },
+        {
+            "name": "Normal",
+            "port": 1702,
+            "minPlayers": 2,
+            "maxPlayers": 15,
+            "timeout": 60,
             "delay": 3,
             "wordlist": "./words.json",
             "saveScores": true
         },
         {
-            "port": 1702,
+            "name": "Hets",
+            "port": 1703,
             "minPlayers": 2,
-            "maxPlayers": 10,
-            "timeout": 60,
-            "delay": 3,
+            "maxPlayers": 20,
+            "timeout": 30,
+            "delay": 2,
             "wordlist": "./words.json",
             "saveScores": true
         }
