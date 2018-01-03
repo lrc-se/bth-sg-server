@@ -16,6 +16,11 @@ const hiscores = require("./services/hiscores");
  * S&G game object prototype.
  */
 const SgGameProto = {
+    /**
+     * Initializes a game.
+     *
+     * @param   {string}    wordlist    Path to wordlist file.
+     */
     init(wordlist) {
         // init properties
         this.isPaused = true;
@@ -43,24 +48,43 @@ const SgGameProto = {
         this.wordlist.load(wordlist);
     },
     
+    
+    /**
+     * Handles login request.
+     *
+     * @param   {string}    nick    Player nickname.
+     * @param   {object}    player  Client object.
+     */
     handleLogin(nick, player) {
         if (this.players.size >= this.maxPlayers) {
+            // too many players
             this.server.sendCommand(player, "FULLHOUSE");
             player.socket.close();
         } else if (this.findPlayer(nick)) {
+            // nickname in use
             this.server.sendCommand(player, "DOPPELGANGER");
             player.socket.close();
         } else {
+            // login successful
             player.nick = nick;
             this.server.sendCommand(player, "CMONIN");
             this.addPlayer(player);
         }
     },
     
+    
+    /**
+     * Adds a player to the game.
+     *
+     * @param   {object}    player  Client object.
+     */
     addPlayer(player) {
+        // init properties
         player.status = "online";
         player.points = 0;
         player.isDrawing = false;
+        
+        // add player
         this.players.add(player);
         this.drawers.add(player);
         this.server.broadcastCommand("PEEKABOO", player.nick, player);
@@ -84,10 +108,19 @@ const SgGameProto = {
         }
     },
     
+    
+    /**
+     * Removes a player from the game.
+     *
+     * @param   {object}    player  Client object.
+     */
     removePlayer(player) {
+        // safety check
         if (!this.players.has(player)) {
             return;
         }
+        
+        // remove player
         this.players.delete(player);
         this.drawers.delete(player);
         this.server.broadcastCommand("SKEDADDLE", player.nick);
@@ -109,6 +142,14 @@ const SgGameProto = {
         }
     },
     
+    
+    /**
+     * Finds a player by name in pool of connected clients.
+     *
+     * @param   {string}    nick    Player nickname.
+     *
+     * @returns {?object}           Matching client object, or null if no match found.
+     */
     findPlayer(nick) {
         for (let player of this.players) {
             if (player.nick === nick) {
@@ -118,6 +159,12 @@ const SgGameProto = {
         return null;
     },
     
+    
+    /**
+     * Returns stats for all connected players.
+     *
+     * @returns {Array}     Array of objects with nick and points properties.
+     */
     getPlayerStats() {
         let players = [];
         for (let player of this.players) {
@@ -129,10 +176,22 @@ const SgGameProto = {
         return players;
     },
     
+    
+    /**
+     * Adds a shape to the drawing buffer.
+     *
+     * @param   {object}    shape   Shape object.
+     */
     addShape(shape) {
         this.shapes.push(shape);
     },
     
+    
+    /**
+     * Removes shapes from the drawing buffer (LIFO sequence).
+     *
+     * @param   {number}    [num]   Number of shapes to remove (zero or omitted value = remove all)
+     */
     removeShapes(num) {
         if (num > 0) {
             this.shapes.splice(-num, num);
@@ -141,12 +200,22 @@ const SgGameProto = {
         }
     },
     
-    checkWord(word, player) {
+    
+    /**
+     * Check whether a chat message is a correct answer to the current word being guessed on.
+     *
+     * @param   {string}    msg     Message to check.
+     * @param   {object}    player  Client object (message sender).
+     */
+    checkWord(msg, player) {
+        // safety check
         if (this.isPaused || player === this.curDrawer) {
             return;
         }
         
-        if (word.trim().toUpperCase() === this.curWord.toUpperCase()) {
+        // match current word
+        if (msg.trim().toUpperCase() === this.curWord.toUpperCase()) {
+            // pause game
             clearInterval(this.timer);
             this.isPaused = true;
             
@@ -175,7 +244,12 @@ const SgGameProto = {
         }
     },
     
+    
+    /**
+     * Moves on to the next word.
+     */
     nextWord() {
+        // clear drawing buffer
         this.removeShapes();
         
         // are there any players left?
@@ -203,11 +277,19 @@ const SgGameProto = {
         this.server.broadcastCommand("TMINUS", this.countdown);
     },
     
+    
+    /**
+     * Moves on to the next word after the registered delay.
+     */
     nextWordDelayed() {
         this.curDrawer.isDrawing = false;
         setTimeout(this.nextWord, this.delay * 1000);
     },
     
+    
+    /**
+     * Countdown callback, invoked every second until timeout.
+     */
     tick() {
         this.countdown -= 1;
         if (this.countdown < 1) {
@@ -218,7 +300,13 @@ const SgGameProto = {
         }
     },
     
+    
+    /**
+     * Stops the game.
+     */
     stop() {
+        clearInterval(this.timer);
+        this.isPaused = true;
         for (let player of this.players) {
             player.socket.close();
         }
