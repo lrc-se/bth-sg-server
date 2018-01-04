@@ -20,6 +20,8 @@ In this version of the game for the modern web, gameplay is handled by a central
 for presumptive players to connect to, with (possibly) varying conditions, such as allotted time for drawing/guessing, number of players, and the wordlist used. 
 Players connect through a client frontend in the form of a standalone webpage, in which they are given a graphical interface for drawing, chatting and guessing.
 
+Note that all texts intended for players are in Swedish, even though English is used for all code, comments and internal log messages.
+
 
 ### Server structure
 
@@ -236,7 +238,10 @@ whose `start` method is called with an options object with the following format:
 ```
 
 The `start` method returns a `Promise` which resolves when all server instances have been started, 
-or rejects if there is an error during startup. The argument to the reject function is `true` if the error is fatal.
+with the callback receiving an object containing non-fatal error messages for any individual game servers that failed to start. 
+The keys of this object map to the 1-based indices of the game servers that caused the errors, 
+and the corresponding values contain the error messages in question. 
+In case of a fatal error during startup, the `Promise` rejects with an error message as argument.
 
 
 ### Maintenance

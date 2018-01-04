@@ -26,17 +26,24 @@ tap.tearDown(process.exit);
 
 
 tap.test("Test config file errors", function(t) {
-    startServers("config.foo").catch(function(res) {
-        t.true(res, "fatal: missing config file");
+    startServers("config.foo").catch(function(msg) {
+        t.equal(msg.substring(0, 26), "Could not read config file", "fatal: missing config file");
         return startServers("config-invalid1.json");
-    }).catch(function(res) {
-        t.true(res, "fatal: invalid config file format");
+    }).catch(function(msg) {
+        t.equal(msg, "Invalid config file", "fatal: invalid config file format");
         return startServers("config-invalid2.json");
-    }).catch(function(res) {
-        t.true(res, "fatal: missing game definitions");
+    }).catch(function(msg) {
+        t.equal(msg, "No games specified in config file", "fatal: missing game definitions");
         return startServers("config-invalid3.json");
-    }).catch(function(res) {
-        t.false(res, "non-fatal: missing wordlist for single game server");
+    }).then(function(errors) {
+        t.same(
+            [Object.keys(errors), errors[2].substring(0, 42)],
+            [["2"], "Could not find wordlist for game server #2"],
+            "non-fatal: missing wordlist for single game server"
+        );
+        t.end();
+    }).catch(function(msg) {
+        t.fail(msg);
         t.end();
     });
 });

@@ -13,8 +13,6 @@ SgSetup.start({
     rootDir: __dirname,
     configFile: "./config.json",
     logLevel: SgSetup.LOG_MSG
-}).catch(function(fatal) {
-    if (fatal) {
-        process.exit(1);
-    }
+}).catch(function() {
+    process.exit(1);
 });

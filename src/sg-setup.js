@@ -63,30 +63,28 @@ let SgSetup = {
  * @param   {string}    configFile  Path to configuration file.
  *
  * @returns {Promise}               Promise resolving when configuration has been loaded,
- *                                  rejecting with truthy argument on fatal failure.
+ *                                  rejecting with error message on fatal failure.
  */
 function loadConfig(configFile) {
     return new Promise(function(resolve, reject) {
-        fs.readFile(path.join(rootDir, configFile), "utf8", function(err, data) {
+        let filename = path.join(rootDir, configFile);
+        fs.readFile(filename, "utf8", function(err, data) {
             // validate config
             if (!err) {
                 let cfg;
                 try {
                     cfg = JSON.parse(data);
                 } catch (ex) {
-                    log("Invalid config file", SgSetup.LOG_ERROR);
-                    return reject(true);
+                    return reject(log("Invalid config file", SgSetup.LOG_ERROR));
                 }
                 if (!Array.isArray(cfg.games) || !cfg.games.length) {
-                    log("No games specified in config file", SgSetup.LOG_ERROR);
-                    return reject(true);
+                    return reject(log("No games specified in config file", SgSetup.LOG_ERROR));
                 }
                 
                 Object.assign(config, cfg);
                 resolve();
             } else {
-                log("Config file not found", SgSetup.LOG_ERROR);
-                reject(true);
+                reject(log(`Could not read config file: ${filename}`, SgSetup.LOG_ERROR));
             }
         });
     });
@@ -96,8 +94,9 @@ function loadConfig(configFile) {
 /**
  * Starts all servers.
  *
- * @returns {Promise}   Promise resolving when all servers have started, rejecting on failure
- *                      (with truthy argument if fatal).
+ * @returns {Promise}   Promise resolving with an object containing non-fatal error messages
+ *                      for individual game servers when all servers have started,
+ *                      rejecting with error message on fatal failure.
  */
 function startServers() {
     return new Promise(function(resolve, reject) {
@@ -107,28 +106,23 @@ function startServers() {
         server = http.createServer(app);
         server.listen(config.port, function(err) {
             if (err) {
-                log(`Error starting main server: ${err}`, SgSetup.LOG_ERROR);
-                return reject(true);
+                return reject(log(`Error starting main server: ${err}`, SgSetup.LOG_ERROR));
             }
             log(`Main server running on port ${config.port}`, SgSetup.LOG_MSG);
             
             // create game servers
             let counter = 0;
-            let failed = false;
+            let errors = {};
             for (let num = 1; num <= config.games.length; ++num) {
-                startGameServer(config.games[num - 1], num).then(check).catch(function() {
-                    failed = true;
+                startGameServer(config.games[num - 1], num).then(check).catch(function(res) {
+                    errors[res.id] = res.message;
                     check();
                 });
             }
 
             function check() {
                 if (++counter >= config.games.length) {
-                    if (!failed) {
-                        resolve();
-                    } else {
-                        reject();
-                    }
+                    resolve(errors);
                 }
             }
         });
@@ -140,21 +134,23 @@ function startServers() {
  * Starts a game server.
  *
  * @param   {object}    cfg     Configuration object for game server (see module defaults).
- * @param   {number}    num     Game index (1-based).
+ * @param   {number}    id      Game index (1-based).
  *
  * @returns {Promise}           Promise resolving when game server has started,
- *                              rejecting on failure.
+ *                              rejecting with error message on failure.
  */
-function startGameServer(cfg, num) {
+function startGameServer(cfg, id) {
     return new Promise(function(resolve, reject) {
         // check wordlist
         cfg.wordlist = path.join(rootDir, cfg.wordlist);
         if (!fs.existsSync(cfg.wordlist)) {
-            log(
-                `Could not find wordlist for game server #${num}: ${cfg.wordlist}`,
-                SgSetup.LOG_ERROR
-            );
-            return reject();
+            return reject({
+                id: id,
+                message: log(
+                    `Could not find wordlist for game server #${id}: ${cfg.wordlist}`,
+                    SgSetup.LOG_ERROR
+                )
+            });
         }
         
         // setup
@@ -168,19 +164,24 @@ function startGameServer(cfg, num) {
             server: server,
             port: cfg.port,
             game: game,
-            num: num
+            id: id
         };
         app.locals.games.push(gameServer);
         
         // start server
         server.listen(cfg.port, function(err) {
             if (err) {
-                log(`Error starting game server #${gameServer.num}: ${err}`, SgSetup.LOG_ERROR);
-                return reject();
+                return reject({
+                    id: id,
+                    message: log(
+                        `Error starting game server #${gameServer.id}: ${err}`,
+                        SgSetup.LOG_ERROR
+                    )
+                });
             }
             
             log(
-                `Game server #${gameServer.num} running on port ${cfg.port} ` +
+                `Game server #${gameServer.id} running on port ${cfg.port} ` +
                 `(min: ${cfg.minPlayers}, max: ${cfg.maxPlayers}, timeout: ${cfg.timeout})`,
                 SgSetup.LOG_MSG
             );
@@ -195,17 +196,19 @@ function startGameServer(cfg, num) {
  *
  * @param   {string}    msg     Log message.
  * @param   {number}    level   Log level for message.
+ *
+ * @returns {string}            The log message.
  */
 function log(msg, level) {
-    if (level > logLevel) {
-        return;
+    if (level <= logLevel) {
+        if (level === SgSetup.LOG_ERROR) {
+            console.error(msg);
+        } else {
+            console.log(msg);
+        }
     }
     
-    if (level === SgSetup.LOG_ERROR) {
-        console.error(msg);
-    } else {
-        console.log(msg);
-    }
+    return msg;
 }
 
 
@@ -228,7 +231,7 @@ function start(cfg) {
     logLevel = (typeof cfg.logLevel != "undefined" ? cfg.logLevel : SgSetup.LOG_MSG);
     
     // start servers
-    if (typeof cfg.configFile != "undefined") {
+    if (typeof cfg.configFile == "string") {
         // load config from file
         return loadConfig(cfg.configFile).then(startServers);
     } else {
