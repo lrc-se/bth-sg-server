@@ -54,11 +54,11 @@ const WordlistProto = {
 
 
 /**
- * Constructor function.
+ * Wordlist manager factory function.
  *
  * @returns {object}    Wordlist manager object instance.
  */
-function Wordlist() {
+function createWordlist() {
     let wordlist = Object.create(WordlistProto);
     wordlist._words = [];
     wordlist._wordBuffer = [];
@@ -66,4 +66,4 @@ function Wordlist() {
 }
 
 
-module.exports = Wordlist;
+module.exports = createWordlist;

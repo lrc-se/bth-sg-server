@@ -12,7 +12,7 @@ var wordlist;
 
 
 tap.beforeEach(function() {
-    wordlist = new Wordlist();
+    wordlist = Wordlist();
     return Promise.resolve();
 });
 
@@ -44,7 +44,7 @@ tap.test("Test wordlist loading from file", function(t) {
 
 
 tap.test("Test wordlist object independence", function(t) {
-    let wordlist2 = new Wordlist();
+    let wordlist2 = Wordlist();
     wordlist.load(["foo", "bar", "baz"]);
     wordlist2.load(["foo", "bar", "baz", "quux"]);
     

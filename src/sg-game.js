@@ -44,7 +44,7 @@ const SgGameProto = {
         this.tick = this.tick.bind(this);
         
         // load wordlist
-        this.wordlist = new Wordlist();
+        this.wordlist = Wordlist();
         this.wordlist.load(wordlist);
     },
     
