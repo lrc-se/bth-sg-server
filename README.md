@@ -12,13 +12,50 @@ This is the server part of a JavaScript-based re-implementation of the Swedish g
 [Go to client](https://github.com/lrc-se/bth-sg-client)
 
 
+Table of contents
+-----------------
+
+1. [**Overview**](#overview)
+    - [Server structure](#server-structure)
+        - [Limitations](#limitations)
+    - [Client structure](#client-structure)
+2. [**Installation**](#installation)
+3. [**Configuration**](#configuration)
+    - [Server settings](#server-settings)
+    - [Wordlists](#wordlists)
+    - [Database connection](#database-connection)
+4. [**Running**](#running)
+    - [Server only](#server-only)
+    - [Server with MongoDB using Docker](#server-with-mongodb-using-docker)
+    - [MongoDB only using Docker](#mongodb-only-using-docker)
+    - [Startup options](#startup-options)
+    - [Maintenance](#maintenance)
+5. [**API**](#api)
+6. [**Testing**](#testing)
+    - [Standard tests](#standard-tests)
+    - [Docker-based tests](#docker-based-tests)
+    - [Coverage](#coverage)
+7. [**Technical discussion**](#technical-discussion)
+    - [Architecture](#architecture)
+        - [Modularity](#modularity)
+            - [Event system](#event-system)
+            - [Testability & integration](#testability-integration)
+        - [Configurability](#configurability)
+    - [Web Sockets](#web-sockets)
+    - [Custom module: ws-server](#custom-module-ws-server)
+    - [Database](#database)
+    - [Continuous integration services](#continuous-integration-services)
+    - [Tests](#tests)
+8. [**About**](#about)
+
+
 Overview
 --------
 
 Skissa & Gissa is a classic game where contestants are given words to draw, while the other players try to guess what the word is. 
 In this version of the game for the modern web, gameplay is handled by a central server offering one or more games ("game servers") 
 for presumptive players to connect to, with (possibly) varying conditions, such as allotted time for drawing/guessing, number of players, and the wordlist used. 
-Players connect through a client frontend in the form of a standalone webpage, in which they are given a graphical interface for drawing, chatting and guessing.
+Players connect through a client SPA in the form of a standalone webpage, in which they are given a graphical interface for drawing, chatting and guessing.
 
 Note that all texts intended for players are in Swedish, even though English is used for all code, comments and internal log messages.
 
@@ -44,11 +81,17 @@ See the [technical discussion section](#technical-discussion) for more in-depth 
 
 - Neither the server nor the client supports user identification, so high scores are only tied to nicknames repeat occurrences of which may or may not belong to the same person. 
   There is therefore also no guarantee that a specific person's favorite nickname is available at a specific time, since there is no way to restrict its use.
+
 - The server application does not provide an interface, graphical or otherwise, 
   and once it has been started it must be stopped and restarted in its entirety if configuration changes are to be made,
   such as the number or settings of the constituent game servers. Any and all currently connected players will therefore get thrown out if and when this happens.
+
 - Countdown resolution is whole seconds, which means that if a player connects between ticks, his or her *local* countdown will be out of sync with that of the server.
   In any event it is the server-side countdown that provides the *actual* timing governing game flow, so the local countdowns are always approximate.
+
+- Each game run by the server requires its own port, plus another for the API. 
+  Even if the games use Web Sockets exclusively, the API cannot coexist on the same port with one of them because they utilize different listeners.
+
 - Apart from short console messages during startup, the server does not log anything.
 
 
@@ -262,7 +305,7 @@ When running, the main server offers three API routes for use by the client appl
 The response consists of an object containing the data payload in its `data` property if the request was successful, 
 or an error message in the `error` property in case of failure.
 
-See the [configuration section](#Configuration) regarding how to set up CORS for these routes.
+See the [configuration section](#configuration) regarding how to set up CORS for these routes.
 
 
 #### `/api/info`
@@ -332,8 +375,8 @@ Returns a high score list (top ten) of points previously attained by players usi
 ```
 
 
-Tests
------
+Testing
+-------
 
 A test suite using [Node Tap](http://www.node-tap.org/) is included, together with [ESLint](https://eslint.org/) for linting. 
 Set the `SG_PORT` environment variable to change the base port the test suite uses (defaults to 1701).
@@ -377,13 +420,146 @@ The standard test commands will generate a coverage report in HTML format in *bu
     npm run unit-clover
 
 The suite includes tests for application startup, API routes, wordlist handling, and game flow using Web Sockets. 
-Note that there are, as of now, no tests for the database functions, but the module code has been specifically designed with this possibility in mind.
+Note that there are, as of now, no tests for the database functions (see more below).
 
 
 Technical discussion
 --------------------
 
-TBD
+The server application is wholly separate from its client counterpart and can be deployed on any Node-capable web server, 
+provided that said server supports native Web Sockets (HTTP upgrade) is able to listen on the (public) ports defined in the configuration. 
+At the same time there is nothing stopping a server owner to host and run the two applications together, but it is not *required* – 
+any S&G server can respond to any S&G client, provided that the former has enabled CORS when applicable.
+
+
+### Architecture
+
+The application is highly modularized and uses ES6 syntax (mostly in the form of shorthand) where available, 
+but stays well clear of the *fake classes* that have been bolted on despite going against the very nature of JavaScript; 
+instead the module code is based on factory functions and prototypes.
+
+#### Modularity
+
+The majority of the included modules have been written in such a way as to instantiate independent objects, 
+while still making use of shared functions (but not shared data) where appropriate. 
+As a result the server can easily run an arbitrary number of games in parallel by simply instantiating a series of independent game runner objects, 
+which in turn instantiate independent socket listeners, and so on.
+
+##### Event system
+
+The `sg-server` module, which handles the Web Sockets connections, is hooked into [Node's event system](https://nodejs.org/api/events.html), 
+and communicates with the game runner instance (`sg-game`) by emitting events on itself. 
+This prevents tight two-way coupling between these components and facilitates separation of concerns, 
+since the socket listener need not be aware of what consequences its events have, or who (if anyone) listens to them in turn. 
+All game logic can therefore be kept in `sg-game`, with only lower-level protocol responses being handled directly by `sg-server`.
+
+##### Testability & integration
+
+Keeping the components independent, within certain limits, also facilitates testing, 
+and specific care has been taken to enable external access points for functionality and data that should be exposed to whatever surrounding scope has use of them – 
+which may or may not be a test environment.
+
+One example of this is the `sg-startup` module, which is in charge of launching the full S&G server application and enables the caller to be notified of 
+the completion status of the startup procedure through a `Promise`-based series of invocations. 
+Another example is the possibility to define a callback for the high score update procedure, which is also `Promise`-based, 
+thereby enabling the calling code to determine whether the update succeeded or not.
+
+#### Configurability
+
+A central tenet of the S&G server is the ability to easily change its behavior through configuration settings. 
+This applies both to the main *config.json* file, which exposes a wide range of options, and to the various factory functions, 
+which typically accept one or more option objects that can be used to further fine-tune the workings of the application.
+
+The existence of the `sg-startup` module is a logical consequence of this, as well as the testability concerns outlined above, 
+putting more power in the hands of the developer without the need to delve deeper into the code. 
+On a higher level, the file-based configuration, including custom wordlist files, 
+provides a simple way to set up the main server and should suffice in the typical use case.
+
+
+### Web Sockets
+
+The native Web Sockets API now available to browsers provides a perfect way for handling the realtime requirements of the game, 
+completely removing the need for polling (long or otherwise) or other shaky push techniques. 
+The server application needs to send and receive updates as soon as they occur – with regard to both drawing, chatting/guessing and game flow events – 
+which the custom JSON protocol makes it easy to do in a uniform manner while still allowing the use of differing data formats *within* the payload. 
+All in all, basing the game on Web Sockets has been very satisfactory.
+
+
+### Custom module: ws-server
+
+The server application uses a custom module called `ws-server`, which is a wrapper around the `Server` object of the [`ws` module](https://www.npmjs.com/package/ws), 
+providing a simple interface for handling Web Sockets connections, including automatic ping timeouts.
+
+Of particular interest is that the module instantiates a connection-specific "client object" that is passed to all event handlers, 
+which the S&G server uses both to store player data and to manage the player's connection, since the object provides direct access to the underlying socket. 
+By relying on the client object all player information is kept in one place, without the need to extend the actual socket and/or creating circular references.
+
+The `ws-server` module is general in its design and can be used in a wide range of server applications based on Web Sockets, 
+so it is not in any way restricted to this project. It has therefore been made [publically available through `npm`](https://www.npmjs.com/package/ws-server), 
+which is the de facto go-to place for JavaScript modules, offering a simple, uniform way of managing dependencies which is crucial to any project of appreciable size. 
+Now, if it were just [more efficient](https://pbs.twimg.com/media/C3SOI-_WAAAM4Js.jpg)...
+
+
+### Database
+
+The use of MongoDB to persist scores turned out to be a good fit, mainly because of the almost complete lack of database setup needed. 
+Neither tables nor schemata need to be created before – the `scores` collection will instead spring into existence the first time an access attempt is made, 
+whether to read or write. Furthermore the MongoDB JavaScript driver provides a very simple way of performing upserts, 
+packing into a single function call something which would usually require several sequential SQL operations in a relational database. 
+So, a good fit indeed.
+
+On a technical level the application uses two services that abstract away large parts of the required boilerplate involved in using the driver – 
+one to handle the database connection as such, which is in turn used by another to handle collection operations – 
+but only utilizes a part of what they have to offer for the simple reason that its actual demands are quite slim.
+
+That said, the use cases for NoSQL databases remain fewer and more specific than those for traditional relational databases, 
+and it is unlikely that the latter will be going the way of the dinosaurs any time soon. 
+Their strength is, obviously, in *relational* applications, which, as is or should be commonly known, abound on the Internet.
+
+
+### Continuous integration services
+
+The server repo is tied to two external services: [Travis CI](https://travis-ci.com/), which handles automated tests with three different versions of Node, 
+and [Scrutinizer](https://scrutinizer-ci.com/), which provides code quality analyses and code coverage stats. 
+These services have been selected due to ease of use and provided functionality, plus the fact that both can use GitHub for login purposes, 
+eliminating the need to register for yet another couple of online accounts. Scrutinizer also has the advantage that it can generate the code coverage report by itself, 
+and does not require a connection with another service to do it.
+
+Travis CI has mostly been rock solid and provides a simple way to ascertain that the application passes all tests, 
+but at times its build process fails due to transient errors not related to the actual repo. Scrutinizer is the more valuable tool of the two, 
+providing valuable feedback for issues that may not directly impact the function of the code, but which are still to be considered bugs.
+
+Still, Scrutinizer has a tendency to misfire at times, identifying issues which are not *actually* errors, but rather a result of the tool's not being aware of the larger picture – 
+intentional console output in a CLI, for example. Its grounds for grading files and functions are also far from clear, 
+and it has often been the case that a seemingly innocent piece of code has been relegated to **B** status for no *apparent* reason, pulling the total grade down, 
+while other more conspicuous pieces remain on the **A** level. Given these constraints, the code quality score awarded must be described as quite sufficient.
+
+
+### Tests
+
+Node Tap has been chosen as the test runner for much the same reasons as the author of that tool outlines on its [start page](http://www.node-tap.org/), 
+but this quote kind of says it all:
+
+> *JavaScript tests should be JavaScript programs, not English-language poems with weird punctuation.*
+
+It is also lightweight and quick and requires no external tools or transpilation, but can be augmented with things like custom assertion libraries if one wants to. 
+Node Tap also comes with [Istanbul](https://istanbul.js.org/) (in the form of [`nyc`](https://www.npmjs.com/package/nyc)) included, 
+so code coverage reporting is very simple to get up and running without any further ado.
+
+Due to the modular nature of the application described above, high code coverage levels can be achieved without too much hassle. 
+To wit, many of the components can be tested both on their own and in conjunction with each other, which the included test suite illustrates. 
+The trickiest part to test is the proper progression of a game round, which necessitates careful state management and a strict adherence to the expected sequence of protocol commands – 
+all handled by actual Web Sockets – but the result is a series of tests that should be able to pinpoint breaking changes in the general game flow.
+
+Database tests have, unfortunately, not been implemented at this time for the simple reason that *time* to set them up properly is precisely what has been missing. 
+The high score functions – including the API route – are therefore not covered by the test suite, 
+but as previously mentioned the module code has been specifically designed with this possibility in mind.
+
+It should also be mentioned that ensuring that all intended *functionality* is tested is more important than merely reaching a high coverage score. 
+Just the fact that many or all *code paths* have been traversed does not necessarily mean that the application actually works as expected, 
+since there are many, many possible combinations of internal state that may take much the same logic paths, 
+but may equally well change the outcome depending on just what is contained in said state. In other words, 
+high code coverage in tests in and of itself is not a guarantee for correct code and should not be taken as such – it's just a number.
 
 
 About
