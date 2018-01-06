@@ -1,6 +1,6 @@
 {
   "name": "sg-server",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Skissa & Gissa server",
   "main": "index.js",
   "scripts": {
@@ -17,8 +17,10 @@
     "unit-clover": "tap --reporter=tap --coverage --coverage-report=clover test/*.js",
     "lint": "eslint ."
   },
-  "author": "LRC",
-  "license": "",
+  "homepage": "https://github.com/lrc-se/bth-sg-server",
+  "repository": "lrc-se/bth-sg-server",
+  "author": "LRC <kabc16@student.bth.se>",
+  "license": "CC-BY-NC-SA-4.0",
   "devDependencies": {
     "eslint": "^4.11.0",
     "eslint-plugin-react": "^7.4.0",
