@@ -399,7 +399,7 @@ npm test
 
 ### Docker-based tests
 
-Use the following commands to run the full test suite with different version of Node (alpine) using Docker. 
+Use the following commands to run the full test suite with different versions of Node (alpine) using Docker. 
 Each container will print out the Node version before launching the test run, for easy confirmation.
 
 ```bash
@@ -428,7 +428,7 @@ Technical discussion
 --------------------
 
 The server application is wholly separate from its client counterpart and can be deployed on any Node-capable web server, 
-provided that said server supports native Web Sockets (HTTP upgrade) is able to listen on the (public) ports defined in the configuration. 
+provided that said server supports native Web Sockets (HTTP upgrade) and is able to listen on the (public) ports defined in the configuration. 
 At the same time there is nothing stopping a server owner to host and run the two applications together, but it is not *required* – 
 any S&G server can respond to any S&G client, provided that the former has enabled CORS when applicable.
 
@@ -436,7 +436,7 @@ any S&G server can respond to any S&G client, provided that the former has enabl
 ### Architecture
 
 The application is highly modularized and uses ES6 syntax (mostly in the form of shorthand) where available, 
-but stays well clear of the *fake classes* that have been bolted on despite going against the very nature of JavaScript; 
+but stays well clear of the *fake classes* that have been bolted on to the language despite going against the very nature of JavaScript; 
 instead the module code is based on factory functions and prototypes.
 
 #### Modularity
@@ -449,7 +449,7 @@ which in turn instantiate independent socket listeners, and so on.
 ##### Event system
 
 The `sg-server` module, which handles the Web Sockets connections, is hooked into [Node's event system](https://nodejs.org/api/events.html), 
-and communicates with the game runner instance (`sg-game`) by emitting events on itself. 
+and communicates with the game runner instances (`sg-game`) by emitting events on itself. 
 This prevents tight two-way coupling between these components and facilitates separation of concerns, 
 since the socket listener need not be aware of what consequences its events have, or who (if anyone) listens to them in turn. 
 All game logic can therefore be kept in `sg-game`, with only lower-level protocol responses being handled directly by `sg-server`.
@@ -491,9 +491,9 @@ All in all, basing the game on Web Sockets has been very satisfactory.
 The server application uses a custom module called `ws-server`, which is a wrapper around the `Server` object of the [`ws` module](https://www.npmjs.com/package/ws), 
 providing a simple interface for handling Web Sockets connections, including automatic ping timeouts.
 
-Of particular interest is that the module instantiates a connection-specific "client object" that is passed to all event handlers, 
+Of particular interest is that the module maintains a connection-specific "client object" that is passed to all event handlers, 
 which the S&G server uses both to store player data and to manage the player's connection, since the object provides direct access to the underlying socket. 
-By relying on the client object all player information is kept in one place, without the need to extend the actual socket and/or creating circular references.
+By relying on the client object all player information is kept in one place, without the need to extend the actual socket object and/or creating circular references.
 
 The `ws-server` module is general in its design and can be used in a wide range of server applications based on Web Sockets, 
 so it is not in any way restricted to this project. It has therefore been made [publically available through `npm`](https://www.npmjs.com/package/ws-server), 
@@ -504,18 +504,18 @@ Now, if it were just [more efficient](https://pbs.twimg.com/media/C3SOI-_WAAAM4J
 ### Database
 
 The use of MongoDB to persist scores turned out to be a good fit, mainly because of the almost complete lack of database setup needed. 
-Neither tables nor schemata need to be created before – the `scores` collection will instead spring into existence the first time an access attempt is made, 
-whether to read or write. Furthermore the MongoDB JavaScript driver provides a very simple way of performing upserts, 
+Neither tables nor schemata need to be created beforehand; the `scores` collection will instead spring into existence the first time an access attempt is made, 
+whether for reading or writing. Furthermore the MongoDB JavaScript driver provides a very simple way of performing upserts, 
 packing into a single function call something which would usually require several sequential SQL operations in a relational database. 
 So, a good fit indeed.
-
-On a technical level the application uses two services that abstract away large parts of the required boilerplate involved in using the driver – 
-one to handle the database connection as such, which is in turn used by another to handle collection operations – 
-but only utilizes a part of what they have to offer for the simple reason that its actual demands are quite slim.
 
 That said, the use cases for NoSQL databases remain fewer and more specific than those for traditional relational databases, 
 and it is unlikely that the latter will be going the way of the dinosaurs any time soon. 
 Their strength is, obviously, in *relational* applications, which, as is or should be commonly known, abound on the Internet.
+
+On a technical level the application uses two services that abstract away large parts of the required boilerplate involved in using the MongoDB driver – 
+one to handle the database connection as such, which is in turn used by the other to handle collection operations – 
+but only utilizes a part of what they have to offer for the simple reason that its actual demands are quite slim here.
 
 
 ### Continuous integration services
@@ -526,14 +526,14 @@ These services have been selected due to ease of use and provided functionality,
 eliminating the need to register for yet another couple of online accounts. Scrutinizer also has the advantage that it can generate the code coverage report by itself, 
 and does not require a connection with another service to do it.
 
-Travis CI has mostly been rock solid and provides a simple way to ascertain that the application passes all tests, 
+Travis CI provides a simple way to ascertain that the application passes all tests and has mostly been rock solid, 
 but at times its build process fails due to transient errors not related to the actual repo. Scrutinizer is the more valuable tool of the two, 
-providing valuable feedback for issues that may not directly impact the function of the code, but which are still to be considered bugs.
+providing useful feedback for issues that may not directly impact the functioning of the code, but which are still to be considered bugs.
 
 Still, Scrutinizer has a tendency to misfire at times, identifying issues which are not *actually* errors, but rather a result of the tool's not being aware of the larger picture – 
 intentional console output in a CLI, for example. Its grounds for grading files and functions are also far from clear, 
 and it has often been the case that a seemingly innocent piece of code has been relegated to **B** status for no *apparent* reason, pulling the total grade down, 
-while other more conspicuous pieces remain on the **A** level. Given these constraints, the code quality score awarded must be described as quite sufficient.
+while other more conspicuous-looking pieces remain on the **A** level. Given these constraints, the code quality score awarded must be described as quite sufficient.
 
 
 ### Tests
