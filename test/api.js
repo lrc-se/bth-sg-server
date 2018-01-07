@@ -16,12 +16,6 @@ let server;
 let app;
 
 
-/*tap.beforeEach(function(done) {
-    app = SgApp({
-    server = http.createServer(app);
-    return Promise.resolve();
-});*/
-
 function startServer(serverConfig, gameConfig) {
     serverConfig = serverConfig || {};
     gameConfig = gameConfig || {};
