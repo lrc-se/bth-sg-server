@@ -7,7 +7,7 @@ Skissa & Gissa (server)
 [![Scrutinizer Code Coverage](https://scrutinizer-ci.com/g/lrc-se/bth-sg-server/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/lrc-se/bth-sg-server/?branch=master)
 
 
-This is the server part of a JavaScript-based re-implementation of the Swedish game **Skissa & Gissa**.
+This is the server part of a JavaScript-based online re-implementation of the Swedish game **Skissa & Gissa**.
 
 [Go to client](https://github.com/lrc-se/bth-sg-client)
 
@@ -39,7 +39,7 @@ Table of contents
     - [Architecture](#architecture)
         - [Modularity](#modularity)
             - [Event system](#event-system)
-            - [Testability & integration](#testability-integration)
+            - [Testability & integration](#testability--integration)
         - [Configurability](#configurability)
     - [Web Sockets](#web-sockets)
     - [Custom module: ws-server](#custom-module-ws-server)
@@ -74,7 +74,8 @@ and MongoDB can easily satisfy the application's rather lightweight requirements
 running and testing all or parts of the application, but it can also be troublesome to set up properly in itself, 
 so the S&G server does not actively depend on it.
 
-See the [technical discussion section](#technical-discussion) for more in-depth descriptions of the constituent parts.
+See the [technical discussion section](#technical-discussion) for more in-depth descriptions of the constituent parts, and the separate [protocol specification](./protocol.md) 
+for more information on the protocol format.
 
 
 #### Limitations
@@ -555,7 +556,7 @@ Database tests have, unfortunately, not been implemented at this time for the si
 The high score functions – including the API route – are therefore not covered by the test suite, 
 but as previously mentioned the module code has been specifically designed with this possibility in mind.
 
-It should also be mentioned that ensuring that all intended *functionality* is tested is more important than merely reaching a high coverage score. 
+It should also be mentioned that, in general, ensuring that all intended *functionality* is tested is more important than merely reaching a high coverage score. 
 Just the fact that many or all *code paths* have been traversed does not necessarily mean that the application actually works as expected, 
 since there are many, many possible combinations of internal state that may take much the same logic paths, 
 but may equally well change the outcome depending on just what is contained in said state. In other words, 
@@ -566,5 +567,5 @@ About
 -----
 
 **Type:** School project @[BTH](https://www.bth.se/)  
-**License:** MIT  
+**License:** CC-BY-NC-SA-4.0  
 **Author:** [LRC](mailto:kabc16@student.bth.se)
