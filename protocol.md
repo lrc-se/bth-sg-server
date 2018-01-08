@@ -99,16 +99,7 @@ Sends a chat message to the server.
 ###### Data
 
 ```javascript
-{
-    // message type
-    "type": "chat",
-    
-    // message author
-    "nick": String,
-    
-    // message contents
-    "text": String
-}
+String      // message text
 ```
 
 #### `SCRAP`
@@ -197,7 +188,18 @@ Sends a chat message to the client.
 
 ###### Data
 
-See corresponding [client-side command](#quoth).
+```javascript
+{
+    // message type ("chat" for standard message)
+    "type": String,
+    
+    // message author
+    "nick": String,
+    
+    // message contents
+    "text": String
+}
+```
 
 #### `SCRAP`
 

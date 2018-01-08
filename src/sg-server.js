@@ -112,8 +112,12 @@ const SgServerProto = {
         // general commands
         switch (data.cmd) {
             case "QUOTH":
-                this.broadcastCommand("QUOTH", data.data, player);
-                this.emit("msg", data.data.text, player);
+                this.broadcastCommand("QUOTH", {
+                    type: "chat",
+                    nick: player.nick,
+                    text: data.data
+                }, player);
+                this.emit("msg", data.data, player);
                 break;
             case "SEEYA":
                 player.socket.close();

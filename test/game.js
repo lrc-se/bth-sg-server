@@ -242,7 +242,7 @@ tap.test("Test broadcasts", function(t) {
                                 break;
                             case 3:
                                 t.equal(data2.cmd, "SCRAP", "clear drawing command received");
-                                sockets[0].sendCmd("QUOTH", msg);
+                                sockets[0].sendCmd("QUOTH", msg.text);
                                 break;
                             case 4:
                                 t.same(data2, {
@@ -326,7 +326,7 @@ tap.test("Test game round", function(t) {
                                             cmd: "DOODLE",
                                             data: shape
                                         }, "correct shape buffer received");
-                                        sockets[1].sendCmd("QUOTH", msg);
+                                        sockets[1].sendCmd("QUOTH", msg.text);
                                         break;
                                     case 4:
                                         t.same(data3, {
@@ -334,7 +334,7 @@ tap.test("Test game round", function(t) {
                                             data: msg
                                         }, "correct chat message received (incorrect guess)");
                                         msg.text = word.toLowerCase();
-                                        sockets[1].sendCmd("QUOTH", msg);
+                                        sockets[1].sendCmd("QUOTH", msg.text);
                                         break;
                                     case 5:
                                         t.same(data3, {
