@@ -40,6 +40,9 @@ let rootDir;
 // log level
 let logLevel;
 
+// hiscore update callback
+let scoreCallback;
+
 
 /**
  * Module interface.
@@ -114,7 +117,11 @@ function startServers() {
             let counter = 0;
             let errors = {};
             for (let num = 1; num <= config.games.length; ++num) {
-                startGameServer(config.games[num - 1], num).then(check).catch(function(res) {
+                let cfg = config.games[num - 1];
+                if (cfg.saveScores && scoreCallback) {
+                    cfg.saveScores = scoreCallback;
+                }
+                startGameServer(cfg, num).then(check).catch(function(res) {
                     errors[res.id] = res.message;
                     check();
                 });
@@ -219,6 +226,7 @@ function log(msg, level) {
  * @param   {string}    [cfg.rootDir]         Root directory for relative paths.
  * @param   {number}    [cfg.logLevel]        Logging level (see module export for constants).
  * @param   {string}    [cfg.configFile]      Path to configuration file.
+ * @param   {function}  [cfg.scoreCallback]   Callback to execute upon completion of hiscore update.
  *
  * @returns {Promise}                       Promise resolving when all servers have started,
  *                                          rejecting on failure (with truthy argument if fatal).
@@ -229,6 +237,7 @@ function start(cfg) {
     // set properties
     rootDir = (typeof cfg.rootDir != "undefined" ? cfg.rootDir : ".");
     logLevel = (typeof cfg.logLevel != "undefined" ? cfg.logLevel : SgSetup.LOG_MSG);
+    scoreCallback = (typeof cfg.scoreCallback == "function" ? cfg.scoreCallback : null);
     
     // start servers
     if (typeof cfg.configFile == "string") {

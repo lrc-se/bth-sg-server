@@ -81,7 +81,7 @@ for more information on the protocol format.
 #### Limitations
 
 - Neither the server nor the client supports user identification, so high scores are only tied to nicknames repeat occurrences of which may or may not belong to the same person. 
-  There is therefore also no guarantee that a specific person's favorite nickname is available at a specific time, since there is no way to restrict its use.
+  There is therefore also no guarantee that a specific person's favorite nickname is available in a specific game at a specific time, since there is no way to restrict its use.
 
 - The server application does not provide an interface, graphical or otherwise, 
   and once it has been started it must be stopped and restarted in its entirety if configuration changes are to be made,
@@ -168,11 +168,8 @@ The `games` array defines the parameters for all the separate games the server o
     // path to wordlist file
     "wordlist": String,
     
-    // high score handling:
-    // - truthy: attempt to save high scores to database after each points change
-    // - function: callback to invoke after the update completes
-    //   (with true argument on success, false argument on failure)
-    "saveScores": Boolean || Function
+    // whether to attempt to save high scores to database after each points change
+    "saveScores": Boolean
 }
 ```
 
@@ -219,7 +216,7 @@ By default the database service will use the connection string `mongodb://localh
 but this can be changed by setting the environment variable `SG_DSN` to any valid MongoDB DSN before starting the application.
 
 Any errors encountered during the update process, including not being able to connect at all, will be silently swallowed 
-(but see above for the possibility to handle these events by passing a callback in the `saveScores` config property).
+(but see [startup options](#startup-options) for the possibility to handle these events by defining a callback).
 
 
 Running
@@ -262,7 +259,7 @@ Again, stop all running containers with `npm run stop-docker`, or use Docker Com
 
 ### Startup options
 
-The provided entry script *index.js* exemplifies how to invoke the startup module (*src/sg-startup*), 
+The provided entry script *index.js* exemplifies how to invoke the startup module (*src/sg-setup*), 
 whose `start` method is called with an options object with the following format:
 
 ```javascript
@@ -277,7 +274,11 @@ whose `start` method is called with an options object with the following format:
     // - LOG_NONE: no console output
     // - LOG_ERROR: output errors to console
     // - LOG_MSG: output all messages to console
-    logLevel: Number
+    logLevel: Number,
+    
+    // callback to execute upon completion of high score update, if enabled (optional)
+    // (receives true argument on success, false argument on failure)
+    scoreCallback: Function
 }
 ```
 
@@ -366,7 +367,7 @@ Returns a high score list (top ten) of points previously attained by players usi
         "nick": String,
         
         // player score
-        "points": Number,
+        "score": Number,
         
         // UNIX timestamp, with millisecond precision
         "timestamp": Number
@@ -460,7 +461,7 @@ Keeping the components independent, within certain limits, also facilitates test
 and specific care has been taken to enable external access points for functionality and data that should be exposed to whatever surrounding scope has use of them – 
 which may or may not be a test environment.
 
-One example of this is the `sg-startup` module, which is in charge of launching the full S&G server application and enables the caller to be notified of 
+One example of this is the `sg-setup` module, which is in charge of launching the full S&G server application and enables the caller to be notified of 
 the completion status of the startup procedure through a `Promise`-based series of invocations. 
 Another example is the possibility to define a callback for the high score update procedure, which is also `Promise`-based, 
 thereby enabling the calling code to determine whether the update succeeded or not.
@@ -468,10 +469,10 @@ thereby enabling the calling code to determine whether the update succeeded or n
 #### Configurability
 
 A central tenet of the S&G server is the ability to easily change its behavior through configuration settings. 
-This applies both to the main *config.json* file, which exposes a wide range of options, and to the various factory functions, 
+This applies both to the main configuration file, which exposes a wide range of options, and to the various factory functions, 
 which typically accept one or more option objects that can be used to further fine-tune the workings of the application.
 
-The existence of the `sg-startup` module is a logical consequence of this, as well as the testability concerns outlined above, 
+The existence of the `sg-setup` module is a logical consequence of this, as well as the testability concerns outlined above, 
 putting more power in the hands of the developer without the need to delve deeper into the code. 
 On a higher level, the file-based configuration, including custom wordlist files, 
 provides a simple way to set up the main server and should suffice in the typical use case.
@@ -493,7 +494,7 @@ providing a simple interface for handling Web Sockets connections, including aut
 
 Of particular interest is that the module maintains a connection-specific "client object" that is passed to all event handlers, 
 which the S&G server uses both to store player data and to manage the player's connection, since the object provides direct access to the underlying socket. 
-By relying on the client object all player information is kept in one place, without the need to extend the actual socket object and/or creating circular references.
+By relying on the client object all player information is kept in one place, without the need to extend the actual socket object and/or create circular references.
 
 The `ws-server` module is general in its design and can be used in a wide range of server applications based on Web Sockets, 
 so it is not in any way restricted to this project. It has therefore been made [publically available through `npm`](https://www.npmjs.com/package/ws-server), 
@@ -505,7 +506,7 @@ Now, if it were just [more efficient](https://pbs.twimg.com/media/C3SOI-_WAAAM4J
 
 The use of MongoDB to persist scores turned out to be a good fit, mainly because of the almost complete lack of database setup needed. 
 Neither tables nor schemata need to be created beforehand; the `scores` collection will instead spring into existence the first time an access attempt is made, 
-whether for reading or writing. Furthermore the MongoDB JavaScript driver provides a very simple way of performing upserts, 
+whether for reading or writing. Furthermore the MongoDB JavaScript driver provides a very simple way of performing increment upserts, 
 packing into a single function call something which would usually require several sequential SQL operations in a relational database. 
 So, a good fit indeed.
 
