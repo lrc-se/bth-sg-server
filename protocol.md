@@ -130,7 +130,7 @@ Notifies the client to draw a shape.
 
 ###### Data
 
-See corresponding client-side command.
+See corresponding [client-side command](#doodle).
 
 #### `GOTIT`
 
@@ -197,7 +197,7 @@ Sends a chat message to the client.
 
 ###### Data
 
-See corresponding client-side command.
+See corresponding [client-side command](#quoth).
 
 #### `SCRAP`
 
