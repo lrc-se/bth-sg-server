@@ -224,7 +224,7 @@ const SgGameProto = {
             player.points += Math.floor(points);
             this.curDrawer.points += Math.floor(points / 2);
             
-            // save hiscores
+            // save hiscores and invoke callback (if enabled) upon completion
             if (this.saveScores) {
                 let callback = (typeof this.saveScores == "function" ? this.saveScores : null);
                 hiscores.update(player.nick, this.curDrawer.nick, points).then(function() {
@@ -325,7 +325,7 @@ const SgGameProto = {
  * @param   {number}                gameConfig.maxPlayers         Maximum number of players.
  * @param   {number}                gameConfig.timeout            Round timeout in seconds.
  * @param   {number}                gameConfig.delay              Delay between words in seconds.
- * @param   {String}                gameConfig.wordlist           Path to wordlist file.
+ * @param   {string}                gameConfig.wordlist           Path to wordlist file.
  * @param   {(boolean|function)}    gameConfig.saveScores         Truthy to save scores in database,
  *                                                                invoking callback if callable.
  *

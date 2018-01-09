@@ -23,7 +23,7 @@ function handleConnection(player) {
  * Handles player disconnection.
  *
  * @param   {number}    code    Closing code (not used).
- * @param   {String}    reason  Closing reason (not used).
+ * @param   {string}    reason  Closing reason (not used).
  * @param   {object}    player  Client instance.
  */
 function handleDisconnection(code, reason, player) {
@@ -34,7 +34,7 @@ function handleDisconnection(code, reason, player) {
 /**
  * Handles incoming player messages.
  *
- * @param   {String}    msg     Incoming message.
+ * @param   {string}    msg     Incoming message.
  * @param   {object}    player  Client instance.
  */
 function handleMessage(msg, player) {
@@ -164,7 +164,7 @@ const SgServerProto = {
      * Sends a protocol command to a specific player.
      *
      * @param   {object}    player  Client instance.
-     * @param   {String}    cmd     Command to send.
+     * @param   {string}    cmd     Command to send.
      * @param   {object}    [data]  Data payload, if any.
      */
     sendCommand(player, cmd, data) {
@@ -175,7 +175,7 @@ const SgServerProto = {
     /**
      * Sends a protocol command to all connected players.
      *
-     * @param   {String}    cmd         Command to send.
+     * @param   {string}    cmd         Command to send.
      * @param   {object}    [data]      Data payload, if any.
      * @param   {object}    [exclude]   Client instance to exclude from broadcast, if any.
      */

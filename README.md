@@ -259,7 +259,7 @@ Again, stop all running containers with `npm run stop-docker`, or use Docker Com
 
 ### Startup options
 
-The provided entry script *index.js* exemplifies how to invoke the startup module (*src/sg-setup*), 
+The provided entry script *index.js* exemplifies how to invoke the startup module (*src/sg-setup.js*), 
 whose `start` method is called with an options object with the following format:
 
 ```javascript
